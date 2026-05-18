@@ -1,0 +1,20 @@
+services:
+  - type: web
+    name: ghost-lua-dashboard
+    env: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: PORT
+        value: 3000
+      - key: JWT_SECRET
+        value: SuperSecretKey_ChangeMe_In_Production_2024!
+      - key: JWT_EXPIRES_IN
+        value: 24h
+      - key: ADMIN_USERNAME
+        value: admin
+      - key: ADMIN_PASSWORD
+        value: Admin@1234
+      - key: DISCORD_BOT_TOKEN
+        value: 397742357379809291
