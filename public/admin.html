@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Panel Admin — Ghost Dashboard</title>
+  <meta name="description" content="Panel d'administration pour gérer les utilisateurs." />
+  <link rel="stylesheet" href="/css/style.css" />
+  <link rel="stylesheet" href="/css/admin.css" />
+  <script src="/js/particles.js" defer></script>
+</head>
+<body>
+  <div class="bg-orbs">
+    <div class="bg-orb"></div>
+    <div class="bg-orb"></div>
+    <div class="bg-orb"></div>
+  </div>
+
+  <!-- NAVBAR -->
+  <nav class="navbar">
+    <div class="navbar-brand">
+      <img src="/img/logo.png" alt="Ghost Logo" class="logo-icon-img" />
+      Ghost Dashboard
+      <span class="badge badge-admin" style="margin-left: 4px;">ADMIN</span>
+    </div>
+    <div class="navbar-actions">
+      <a href="/dashboard" class="btn btn-ghost btn-sm">📊 Dashboard</a>
+      <div class="navbar-user">
+        <div class="avatar" id="nav-avatar" style="background: var(--gradient-admin);">A</div>
+        <span id="nav-username" style="font-weight:600; font-size:0.9rem;">Admin</span>
+      </div>
+      <button class="btn btn-ghost btn-sm" onclick="logout()">🚪 Déconnexion</button>
+    </div>
+  </nav>
+
+  <!-- MAIN -->
+  <main class="page-content">
+    <!-- Header -->
+    <div style="margin-bottom: 32px;">
+      <h1 class="page-title">
+        👑 <span class="gradient-text admin-gradient-text">Panel Admin</span>
+      </h1>
+      <p style="color: var(--text-secondary); font-size: 0.9rem;">
+        Gestion complète des utilisateurs et supervision du système.
+      </p>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-grid" style="margin-bottom: 32px; display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px;">
+      <div class="stat-card">
+        <div class="stat-icon purple">👤</div>
+        <div class="stat-value" id="stat-total">—</div>
+        <div class="stat-label">Membres standard</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon gold">⭐</div>
+        <div class="stat-value" id="stat-vips">—</div>
+        <div class="stat-label">Membres VIP</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon pink">👑</div>
+        <div class="stat-value" id="stat-admins">—</div>
+        <div class="stat-label">Administrateurs</div>
+      </div>
+      <div class="stat-card" style="position: relative;">
+        <div class="stat-icon green" id="railway-status-icon">🔌</div>
+        <div class="stat-value" id="stat-railway" style="font-size: 1.2rem; font-weight: 700; color: #10b981;">Vérification...</div>
+        <div class="stat-label">API Railway</div>
+      </div>
+    </div>
+
+    <!-- Alert -->
+    <div id="admin-alert" style="display:none; margin-bottom: 24px;" class="alert"></div>
+
+    <!-- TABS NAVIGATION -->
+    <div class="auth-tabs" style="margin-bottom: 28px; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 8px; display: flex; gap: 8px;">
+      <button id="tab-btn-users" class="active" onclick="switchAdminTab('users')" style="border-radius: 8px; padding: 10px 18px; font-weight: 600; cursor: pointer;">👥 Utilisateurs & Logs</button>
+      <button id="tab-btn-railway" onclick="switchAdminTab('railway')" style="border-radius: 8px; padding: 10px 18px; font-weight: 600; cursor: pointer;">🔑 API Railway (Flask)</button>
+    </div>
+
+    <!-- PANE 1: USERS & LOGS -->
+    <div id="pane-users" class="tab-pane">
+      <!-- Users Table -->
+      <div style="margin-bottom: 36px;">
+        <div class="section-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+          <div>
+            <div class="section-title" style="font-size: 1.25rem; font-weight: 700; color: var(--text-primary);">👥 Gestion des utilisateurs</div>
+            <div class="section-sub" id="users-count" style="color: var(--text-muted); font-size: 0.85rem;">Chargement...</div>
+          </div>
+          <div style="display:flex; gap:12px; align-items:center;">
+            <input type="text" id="search-input" class="form-input" placeholder="🔍 Rechercher..." style="width:200px; padding: 8px 14px;" oninput="filterUsers()" />
+            <button class="btn btn-ghost btn-sm" onclick="loadData()">🔄 Actualiser</button>
+          </div>
+        </div>
+
+        <div class="table-wrapper">
+          <table id="users-table">
+            <thead>
+              <tr>
+                <th>Utilisateur</th>
+                <th>Discord ID</th>
+                <th>Key</th>
+                <th>IP Railway</th>
+                <th>Rôle</th>
+                <th>Inscrit le</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="users-tbody">
+              <tr><td colspan="7" style="text-align:center; color: var(--text-muted); padding: 40px;">Chargement des données...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Audit Log -->
+      <div>
+        <div class="section-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+          <div>
+            <div class="section-title" style="font-size: 1.25rem; font-weight: 700; color: var(--text-primary);">📋 Journal d'activité</div>
+            <div class="section-sub" style="color: var(--text-muted); font-size: 0.85rem;">100 dernières actions locales</div>
+          </div>
+          <button class="btn btn-ghost btn-sm" onclick="loadLogs()">🔄 Rafraîchir</button>
+        </div>
+        <div class="table-wrapper">
+          <table id="logs-table">
+            <thead>
+              <tr>
+                <th>Action</th>
+                <th>Utilisateur</th>
+                <th>IP</th>
+                <th>Date</th>
+              </tr>
+            </thead>
+            <tbody id="logs-tbody">
+              <tr><td colspan="4" style="text-align:center; color: var(--text-muted); padding: 40px;">Chargement...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- PANE 2: RAILWAY API (FLASK) -->
+    <div id="pane-railway" class="tab-pane" style="display:none;">
+      <!-- Railway Control Grid -->
+      <div class="railway-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin-bottom: 32px;">
+        <!-- Card 1: Generate keys -->
+        <div class="railway-card">
+          <div style="font-size: 1.1rem; font-weight: 700; margin-bottom: 12px; color: var(--accent-3);">✨ Générer des clés Railway</div>
+          <div class="form-group" style="margin-bottom: 12px;">
+            <label class="form-label" style="font-size: 0.8rem;">Nombre de clés (max 20)</label>
+            <input type="number" id="railway-gen-count" class="form-input" value="1" min="1" max="20" style="padding: 8px 12px;" />
+          </div>
+          <div class="form-group" style="margin-bottom: 16px;">
+            <label class="form-label" style="font-size: 0.8rem;">Durée de validité (jours, laisser vide si illimité)</label>
+            <input type="number" id="railway-gen-days" class="form-input" placeholder="Illimité" style="padding: 8px 12px;" />
+          </div>
+          <button class="btn btn-primary btn-full" onclick="generateRailwayKeys()" id="railway-gen-btn">Générer les clés</button>
+        </div>
+
+        <!-- Card 2: Add Custom key -->
+        <div class="railway-card">
+          <div style="font-size: 1.1rem; font-weight: 700; margin-bottom: 12px; color: var(--accent-3);">🔑 Ajouter une clé personnalisée</div>
+          <div class="form-group" style="margin-bottom: 12px;">
+            <label class="form-label" style="font-size: 0.8rem;">Nom du code (la clé)</label>
+            <input type="text" id="railway-add-code" class="form-input" placeholder="ex: mon_code_special" style="padding: 8px 12px;" />
+          </div>
+          <div class="form-group" style="margin-bottom: 16px;">
+            <label class="form-label" style="font-size: 0.8rem;">Durée de validité (jours)</label>
+            <input type="number" id="railway-add-days" class="form-input" placeholder="Illimité" style="padding: 8px 12px;" />
+          </div>
+          <button class="btn btn-primary btn-full" onclick="addRailwayKey()" id="railway-add-btn">Ajouter la clé</button>
+        </div>
+
+        <!-- Card 3: Ban IP -->
+        <div class="railway-card">
+          <div style="font-size: 1.1rem; font-weight: 700; margin-bottom: 12px; color: var(--error);">🚫 Bannir une adresse IP</div>
+          <div class="form-group" style="margin-bottom: 24px;">
+            <label class="form-label" style="font-size: 0.8rem;">Adresse IP</label>
+            <input type="text" id="railway-ban-ip" class="form-input" placeholder="ex: 127.0.0.1" style="padding: 8px 12px;" />
+          </div>
+          <button class="btn btn-danger btn-full" onclick="banRailwayIP()" id="railway-ban-btn">Bannir l'IP</button>
+        </div>
+      </div>
+
+      <!-- Railway Keys Table -->
+      <div style="margin-bottom: 36px;">
+        <div class="section-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+          <div>
+            <div class="section-title" style="font-size: 1.25rem; font-weight: 700; color: var(--text-primary);">🔑 Clés enregistrées sur Railway</div>
+            <div class="section-sub" id="railway-keys-count" style="color: var(--text-muted); font-size: 0.85rem;">Chargement...</div>
+          </div>
+          <div style="display: flex; gap: 8px;">
+            <button class="btn btn-danger btn-sm" onclick="resetAllRailwayLocks()">🔓 Libérer toutes les clés</button>
+            <button class="btn btn-ghost btn-sm" onclick="loadRailwayData()">🔄 Actualiser</button>
+          </div>
+        </div>
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>Code / Key</th>
+                <th>Type (Valeur)</th>
+                <th>IP Verrouillée</th>
+                <th>Joueur FiveM / Nom</th>
+                <th>Expiration</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="railway-keys-tbody">
+              <tr><td colspan="6" style="text-align:center; color: var(--text-muted); padding: 40px;">Chargement des clés Railway...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Banned IPs & Logs Grid -->
+      <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 20px;">
+        <!-- Banned IPs -->
+        <div>
+          <div class="section-header" style="margin-bottom: 16px;">
+            <div class="section-title" style="font-size: 1.1rem; font-weight: 700; color: var(--text-primary);">🚫 IPs Bannies</div>
+          </div>
+          <div class="table-wrapper">
+            <table>
+              <thead>
+                <tr>
+                  <th>Adresse IP</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody id="railway-ips-tbody">
+                <tr><td colspan="2" style="text-align:center; color: var(--text-muted); padding: 20px;">Aucune IP bannie.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Railway Logs -->
+        <div>
+          <div class="section-header" style="margin-bottom: 16px;">
+            <div class="section-title" style="font-size: 1.1rem; font-weight: 700; color: var(--text-primary);">📋 Logs d'activité Railway</div>
+          </div>
+          <div class="table-wrapper">
+            <table>
+              <thead>
+                <tr>
+                  <th>Action</th>
+                  <th>Détails</th>
+                  <th>IP</th>
+                  <th>Clé</th>
+                </tr>
+              </thead>
+              <tbody id="railway-logs-tbody">
+                <tr><td colspan="4" style="text-align:center; color: var(--text-muted); padding: 20px;">Chargement des logs Railway...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- MODAL: Confirm Delete -->
+  <div class="modal-backdrop" id="delete-modal">
+    <div class="modal">
+      <div class="modal-title" style="color: var(--error);">🗑️ Supprimer l'utilisateur</div>
+      <p style="color: var(--text-secondary); font-size: 0.9rem;">
+        Êtes-vous sûr de vouloir supprimer <strong id="delete-username" style="color: var(--text-primary);">—</strong> ?
+        Cette action est <strong>irréversible</strong> et supprimera également son compte local.
+      </p>
+      <div class="modal-actions">
+        <button class="btn btn-ghost" onclick="closeModal('delete-modal')">Annuler</button>
+        <button class="btn btn-danger" onclick="confirmDelete()">Supprimer</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: Edit User -->
+  <div class="modal-backdrop" id="edit-user-modal">
+    <div class="modal">
+      <div class="modal-title">✏️ Modifier l'utilisateur</div>
+      <p style="color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 16px;">
+        Modifiez les informations locales du compte utilisateur.
+      </p>
+      
+      <input type="hidden" id="edit-user-id" value="" />
+      
+      <div class="form-group" style="margin-bottom: 12px;">
+        <label class="form-label" for="edit-username">Nom d'utilisateur</label>
+        <input id="edit-username" type="text" class="form-input" placeholder="Pseudo" required />
+      </div>
+
+      <div class="form-group" style="margin-bottom: 12px;">
+        <label class="form-label" for="edit-discord-id">ID Discord</label>
+        <input id="edit-discord-id" type="text" class="form-input" placeholder="ID Discord" required />
+      </div>
+
+      <div class="form-group" style="margin-bottom: 12px;">
+        <label class="form-label" for="edit-discord-key">Clé Discord (Key)</label>
+        <input id="edit-discord-key" type="text" class="form-input" placeholder="Clé d'inscription" required />
+      </div>
+
+      <div class="form-group" style="margin-bottom: 20px;">
+        <label class="form-label" for="edit-role">Rôle du compte</label>
+        <select id="edit-role" class="form-input">
+          <option value="user">👤 Utilisateur standard</option>
+          <option value="vip">⭐ VIP</option>
+          <option value="admin">👑 Administrateur</option>
+        </select>
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn btn-ghost" onclick="closeModal('edit-user-modal')">Annuler</button>
+        <button class="btn btn-primary" onclick="submitEditUser()" id="edit-user-btn">Enregistrer</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/js/admin.js"></script>
+</body>
+</html>

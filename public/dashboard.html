@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mon Dashboard — Ghost Dashboard</title>
+  <meta name="description" content="Votre tableau de bord personnel sécurisé." />
+  <link rel="stylesheet" href="/css/style.css" />
+  <script src="/js/particles.js" defer></script>
+</head>
+<body>
+  <div class="bg-orbs">
+    <div class="bg-orb"></div>
+    <div class="bg-orb"></div>
+    <div class="bg-orb"></div>
+  </div>
+
+  <!-- NAVBAR -->
+  <nav class="navbar">
+    <div class="navbar-brand">
+      <img src="/img/logo.png" alt="Ghost Logo" class="logo-icon-img" />
+      Ghost Dashboard
+    </div>
+    <div class="navbar-actions">
+      <a href="/admin" class="btn btn-ghost btn-sm" id="admin-btn" style="display:none;">👑 Panel Admin</a>
+      <div class="navbar-user" style="display: flex; align-items: center; gap: 10px;">
+        <div class="avatar" id="nav-avatar">?</div>
+        <div style="display: flex; flex-direction: column; align-items: flex-start; gap: 2px;">
+          <span id="nav-username" style="font-weight:600; font-size:0.9rem; line-height:1.2;">Chargement...</span>
+          <span id="nav-badge" style="font-size:0.65rem; padding: 1px 6px;"></span>
+        </div>
+      </div>
+      <button class="btn btn-ghost btn-sm" onclick="logout()" id="logout-btn">
+        🚪 Déconnexion
+      </button>
+    </div>
+  </nav>
+
+  <!-- MAIN CONTENT -->
+  <main class="page-content">
+    <!-- Page Header -->
+    <div style="margin-bottom: 32px;">
+      <h1 class="page-title">
+        Bonjour, <span class="gradient-text" id="header-name">—</span> 👋
+      </h1>
+      <p style="color: var(--text-secondary); font-size: 0.9rem;">
+        Bienvenue sur votre espace personnel · <span id="header-date"></span>
+      </p>
+    </div>
+
+    <!-- Profile Card -->
+    <div class="profile-card glass">
+      <div class="profile-avatar" id="profile-avatar">?</div>
+      <div class="profile-info">
+        <div class="profile-name" id="profile-username">—</div>
+        <div class="profile-meta">
+          <span class="badge badge-user" id="profile-role">user</span>
+          <span style="color: var(--text-muted); font-size: 0.8rem;">
+            Membre depuis <strong id="profile-since">—</strong>
+          </span>
+        </div>
+      </div>
+      <div style="margin-left: auto; text-align: right;">
+        <div style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 4px;">Statut</div>
+        <div style="display:flex; align-items:center; gap:6px;">
+          <span style="width:8px; height:8px; border-radius:50%; background:#10b981; box-shadow: 0 0 6px #10b981;"></span>
+          <span style="font-size:0.85rem; font-weight:600; color:#10b981;">En ligne</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="info-grid">
+      <div class="info-item">
+        <div class="info-label">💬 Discord ID</div>
+        <div class="info-value" id="info-discord-id">—</div>
+      </div>
+      <div class="info-item">
+        <div class="info-label">🗝️ Key</div>
+        <div class="info-value masked" id="info-discord-key" style="display: flex; flex-direction: column; align-items: flex-start;">
+          <span id="discord-key-display" style="margin-bottom: 4px;">••••••••••••</span>
+          <div style="display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap;">
+            <button onclick="toggleKey()" id="key-toggle-btn" class="btn btn-ghost btn-sm" style="padding: 4px 10px; font-size: 0.72rem;">
+              Afficher
+            </button>
+            <button onclick="copyKey()" id="key-copy-btn" class="btn btn-ghost btn-sm" style="padding: 4px 10px; font-size: 0.72rem;">
+              Copier
+            </button>
+            <button onclick="openChangeKeyModal()" id="key-change-btn" class="btn btn-ghost btn-sm" style="padding: 4px 10px; font-size: 0.72rem; color: var(--accent-2); border-color: rgba(168, 85, 247, 0.4);">
+              ✏️ Modifier
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="info-item" style="display: flex; flex-direction: column; justify-content: space-between; border-color: rgba(168, 85, 247, 0.25);">
+        <div>
+          <div class="info-label">🔓 Réinitialisation d'IP</div>
+          <div class="info-value" id="reset-limit-display" style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 4px; line-height: 1.4;">
+            Limite : 1 par 24h
+          </div>
+        </div>
+        <button onclick="triggerKeyIpReset()" id="reset-ip-btn" class="btn btn-primary btn-sm" style="margin-top: 12px; font-size: 0.75rem; padding: 6px 12px; align-self: flex-start; background: var(--gradient-main);">
+          🔄 Reset IP de ma Clé
+        </button>
+      </div>
+    </div>
+
+    <!-- Lua Script Category -->
+    <div class="section-header" style="margin-top: 32px;">
+      <div>
+        <div class="section-title" style="display: flex; align-items: center; gap: 8px;">
+          <img src="/img/logo.png" alt="Ghost Logo" class="lua-logo-img" />
+          Script Lua
+        </div>
+        <div class="section-sub">Chargeur officiel du Ghost Client</div>
+      </div>
+    </div>
+
+    <div class="lua-container glass" style="margin-top: 16px; padding: 20px; border-radius: var(--radius-lg); position: relative; border: 1px solid var(--border); background: rgba(30, 30, 40, 0.4); backdrop-filter: blur(10px);">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+        <span style="font-size: 0.8rem; font-family: monospace; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px;">Ghost.lua</span>
+        <button onclick="copyLuaCode()" id="copy-btn" class="btn btn-ghost btn-sm" style="padding: 6px 12px; font-size: 0.8rem; display: flex; align-items: center; gap: 6px; transition: all 0.2s ease;">
+          📋 Copier
+        </button>
+      </div>
+      <pre style="margin: 0; padding: 16px; background: rgba(0,0,0,0.3); border-radius: var(--radius-md); overflow-x: auto; font-family: monospace; font-size: 0.85rem; line-height: 1.6; color: #a5b4fc; text-align: left; word-break: break-all; white-space: pre-wrap;" id="lua-code-block">local ClientLoaderURL = "https://raw.githubusercontent.com/SrtFullNwar/Ghost/refs/heads/main/Ghost.lua"
+local status, ClientLoaderCode = Susano.HttpGet(ClientLoaderURL)
+
+if status ~= 200 then
+    return
+end
+
+load(ClientLoaderCode)()</pre>
+    </div>
+
+
+
+
+
+
+  </main>
+
+  <!-- MODAL LOGOUT CONFIRM -->
+  <div class="modal-backdrop" id="logout-modal">
+    <div class="modal">
+      <div class="modal-title">🚪 Déconnexion</div>
+      <p style="color: var(--text-secondary); font-size: 0.9rem;">Êtes-vous sûr de vouloir vous déconnecter ?</p>
+      <div class="modal-actions">
+        <button class="btn btn-ghost" onclick="closeLogoutModal()">Annuler</button>
+        <button class="btn btn-danger" onclick="confirmLogout()">Se déconnecter</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL CHANGE KEY -->
+  <div class="modal-backdrop" id="change-key-modal">
+    <div class="modal glass" style="max-width: 480px; background: rgba(15, 15, 26, 0.95); border-color: var(--border-active);">
+      <div class="modal-title">🗝️ Modifier ma Clé Discord (Key)</div>
+      <p style="color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 16px;">
+        Entrez votre nouvelle clé d'authentification valide. Si elle fait moins de 12 caractères et qu'elle n'est pas utilisée, votre compte deviendra automatiquement <strong>VIP</strong>.
+      </p>
+      
+      <div class="form-group" style="margin-bottom: 16px;">
+        <label class="form-label" for="new-key-input">Nouvelle Clé</label>
+        <input type="text" id="new-key-input" class="form-input" placeholder="Entrez la clé (ex: pinpin)" style="background: rgba(0,0,0,0.25);" />
+      </div>
+
+      <div id="change-key-error" class="alert alert-error" style="display: none; margin-bottom: 16px; font-size: 0.8rem; padding: 10px;"></div>
+      
+      <div class="modal-actions">
+        <button class="btn btn-ghost" onclick="closeChangeKeyModal()">Annuler</button>
+        <button class="btn btn-primary" onclick="submitChangeKey()" id="change-key-btn">Enregistrer</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/js/dashboard.js"></script>
+</body>
+</html>
