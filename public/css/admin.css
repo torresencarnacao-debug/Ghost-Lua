@@ -93,3 +93,21 @@ select.form-input option {
 }
 .log-admin_edit_user { background: rgba(59, 130, 246, 0.15); color: #93c5fd; }
 
+/* Custom Premium Badges for Railway Keys */
+.badge-fpsbn {
+  background: linear-gradient(135deg, hsl(315, 100%, 60%) 0%, hsl(270, 95%, 60%) 100%) !important;
+  color: #ffffff !important;
+  font-weight: 700;
+  box-shadow: 0 0 8px rgba(236, 72, 153, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+}
+
+.badge-banner-premium {
+  background: linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%) !important;
+  color: #ffffff !important;
+  font-weight: 700;
+  box-shadow: 0 0 8px rgba(6, 182, 212, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+}
+
+

@@ -1,5 +1,4 @@
-// ─── UTILS ───────────────────────────────────────────────────────────────────
-const API = '';
+const API = window.location.protocol === 'file:' ? 'http://localhost:3000' : '';
 
 function setToken(token) { localStorage.setItem('token', token); }
 function getToken() { return localStorage.getItem('token'); }
@@ -101,8 +100,8 @@ function switchTab(tab) {
   const token = getToken();
   const user  = getUser();
   if (token && user) {
-    if (user.role === 'admin') window.location.href = '/admin';
-    else window.location.href = '/dashboard';
+    if (user.role === 'admin') window.location.href = 'admin.html';
+    else window.location.href = 'dashboard.html';
   }
 })();
 
@@ -143,7 +142,13 @@ async function handleLogin(e) {
     showAlert('Connexion réussie ! Redirection...', 'success');
 
     setTimeout(() => {
-      window.location.href = data.user.role === 'admin' ? '/admin' : '/dashboard';
+      const redirectUrl = localStorage.getItem('redirect_after_login');
+      if (redirectUrl && data.user.role !== 'admin') {
+        localStorage.removeItem('redirect_after_login');
+        window.location.href = redirectUrl;
+      } else {
+        window.location.href = data.user.role === 'admin' ? 'admin.html' : 'dashboard.html';
+      }
     }, 800);
   } catch (err) {
     showAlert('Erreur réseau. Vérifiez votre connexion.');
@@ -158,10 +163,10 @@ async function handleRegister(e) {
   const username    = document.getElementById('reg-username').value.trim();
   const password    = document.getElementById('reg-password').value;
   const discord_id  = document.getElementById('reg-discord-id').value.trim();
-  const discord_key = document.getElementById('reg-discord-key').value.trim();
+  const discord_key = '';
 
-  if (!username || !password || !discord_id || !discord_key) {
-    return showAlert('Veuillez remplir tous les champs.');
+  if (!username || !password || !discord_id) {
+    return showAlert('Veuillez remplir tous les champs obligatoires.');
   }
   if (password.length < 6) {
     return showAlert('Le mot de passe doit contenir au moins 6 caractères.');
@@ -175,7 +180,7 @@ async function handleRegister(e) {
     const res = await fetch(`${API}/api/register`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username, password, discord_id, discord_key })
+      body: JSON.stringify({ username, password, discord_id, discord_key: discord_key || '' })
     });
     const data = await res.json();
 

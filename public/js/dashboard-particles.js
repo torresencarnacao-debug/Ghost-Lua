@@ -90,37 +90,9 @@
     }
   }
 
-  // Line Draw Helper
-  function drawLines() {
-    for (let i = 0; i < particles.length; i++) {
-      for (let j = i + 1; j < particles.length; j++) {
-        const p1 = particles[i];
-        const p2 = particles[j];
-
-        const dx = p1.x - p2.x;
-        const dy = p1.y - p2.y;
-        const dist = Math.sqrt(dx * dx + dy * dy);
-
-        if (dist < config.minDist) {
-          // Dynamic alpha based on distance (closer = more opaque, just like the reference photo!)
-          const alpha = (1 - dist / config.minDist) * 0.22;
-          ctx.beginPath();
-          ctx.moveTo(p1.x, p1.y);
-          ctx.lineTo(p2.x, p2.y);
-          ctx.strokeStyle = `rgba(168, 85, 247, ${alpha})`;
-          ctx.lineWidth = 0.8;
-          ctx.stroke();
-        }
-      }
-    }
-  }
-
   // Animation Loop
   function animate() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-    // Draw lines first
-    drawLines();
 
     // Draw and update particles
     particles.forEach(p => {

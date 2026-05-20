@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Paiement Sécurisé | Ghost Shop</title>
+    <link rel="stylesheet" href="styles.css?v=6">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <script>
+        if (!localStorage.getItem('token')) {
+            localStorage.setItem('redirect_after_login', window.location.href);
+            window.location.replace("admin-login.html");
+        }
+    </script>
+</head>
+<body class="checkout-page">
+    <div class="checkout-wrapper">
+        <!-- Colonne Gauche : Résumé -->
+        <div class="checkout-summary">
+            <div class="checkout-header">
+                <a href="index.html" class="logo" style="text-decoration: none;">
+                    <img src="img/logo.png" alt="Ghost Shop Logo" class="logo-img">
+                    <span>GHOST</span> SHOP
+                </a>
+            </div>
+
+            <div class="summary-content">
+                <p class="summary-subtitle">RÉMUNÉRATION GHOST SHOP</p>
+                <h1 class="summary-total" id="summary-total">19.99 €</h1>
+
+                <div class="summary-product">
+                    <img src="ghost_lua.jpg" alt="Produit" class="product-thumb" id="summary-image">
+                    <div class="product-info">
+                        <h3 id="summary-name">Ghost Lua <span>x1</span></h3>
+                        <span class="product-license">Lifetime</span>
+                    </div>
+                    <div class="product-price" id="summary-price">19.99 €</div>
+                </div>
+
+                <div class="summary-totals">
+                    <div class="summary-row">
+                        <span>Sous-total</span>
+                        <span id="summary-subtotal">19.99 €</span>
+                    </div>
+                    <div class="summary-row total-row">
+                        <span>Total</span>
+                        <span id="summary-final">19.99 €</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="summary-footer">
+                <div class="support-box">
+                    <p class="support-title">Vous avez des problèmes avec votre commande ?</p>
+                    <p class="support-desc">Vous pouvez ouvrir un ticket sur notre serveur Discord pour recevoir de l'aide de notre équipe d'assistance.</p>
+                    <a href="https://discord.gg/yrjffGSnr2" target="_blank" class="support-link">Ouvrir un ticket d'assistance <i class="fa-solid fa-arrow-right"></i></a>
+                </div>
+                <div class="language-selector">
+                    <i class="fa-brands fa-discord" style="color: #5865F2; font-size: 1.5rem;"></i>
+                    <div class="lang-dropdown">
+                        <img src="https://flagcdn.com/w20/fr.png" alt="FR"> Français <i class="fa-solid fa-chevron-down"></i>
+                    </div>
+                </div>
+                <p class="powered-by">Propulsé par <strong>GhostAuth</strong></p>
+            </div>
+        </div>
+
+        <!-- Colonne Droite : Formulaire -->
+        <div class="checkout-form-container" id="checkout-form-container">
+            <form id="checkout-form" class="checkout-form">
+                <!-- Section Contact -->
+                <div class="form-section">
+                    <h3 class="form-section-title">CONTACT ET LIVRAISON</h3>
+                    <div class="form-group">
+                        <label for="email">Adresse électronique *</label>
+                        <input type="email" id="email" placeholder="votre@email.com" required>
+                    </div>
+                    <!-- Nouveau badge utilisateur -->
+                    <div class="user-badge" id="checkout-user-badge" style="display: none;">
+                        <div class="user-info">
+                            <div class="user-avatar-wrapper" id="checkout-user-avatar" style="width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.85rem; color: white; flex-shrink: 0; background: linear-gradient(135deg, hsl(270, 95%, 60%) 0%, hsl(285, 100%, 65%) 100%);">?</div>
+                            <span id="checkout-username" style="font-weight: 600; color: var(--text-primary); font-size: 0.95rem;">Client</span>
+                        </div>
+                        <button type="button" class="btn-outline" onclick="logoutCheckout()">Déconnexion <i class="fa-solid fa-xmark"></i></button>
+                    </div>
+                </div>
+
+                <!-- Section Remise -->
+                <div class="form-section">
+                    <h3 class="form-section-title">REMISE</h3>
+                    <div class="coupon-group">
+                        <input type="text" id="coupon" placeholder="Code des coupons">
+                        <button type="button" class="btn-coupon">Appliquer <i class="fa-solid fa-arrow-right"></i></button>
+                    </div>
+                </div>
+
+
+
+                <!-- Section Paiement -->
+                <div class="form-section">
+                    <div class="form-section-header">
+                        <h3 class="form-section-title">PAIEMENT</h3>
+                        <span class="secure-badge"><i class="fa-solid fa-lock"></i> Toutes les transactions sont sécurisées et chiffrées.</span>
+                    </div>
+                    <div class="payment-methods">
+                        <label class="payment-card active">
+                            <input type="radio" name="payment_method" value="stripe" checked>
+                            <div class="payment-card-content">
+                                <img src="img/stripe.png" alt="Stripe" style="height: 2.2rem; width: 2.2rem; object-fit: contain; border-radius: 6px;">
+                                <div class="payment-card-info">
+                                    <h4>Cartes, Apple Pay & Google Pay</h4>
+                                    <p>via Stripe</p>
+                                </div>
+                                <div class="radio-indicator"></div>
+                            </div>
+                        </label>
+                        <label class="payment-card">
+                            <input type="radio" name="payment_method" value="paypal">
+                            <div class="payment-card-content">
+                                <img src="img/paypal.png" alt="PayPal" style="height: 2.2rem; width: 2.2rem; object-fit: contain; background: #fff; padding: 4px; border-radius: 6px;">
+                                <div class="payment-card-info">
+                                    <h4>PayPal</h4>
+                                    <p>via PayPal</p>
+                                </div>
+                                <div class="radio-indicator"></div>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- CGV et Soumission -->
+                <div class="form-section submit-section">
+                    <label class="checkbox-container">
+                        <input type="checkbox" required checked>
+                        <span class="checkmark"></span>
+                        J'ai lu et j'accepte les conditions d'utilisation de Ghost Shop.
+                    </label>
+                    <label class="checkbox-container">
+                        <input type="checkbox">
+                        <span class="checkmark"></span>
+                        Je souhaite recevoir les mises à jour et les promotions de Ghost Shop.
+                    </label>
+                    
+                    <button type="submit" class="checkout-submit-btn">
+                        Procéder au paiement <i class="fa-solid fa-arrow-right"></i>
+                    </button>
+                </div>
+            </form>
+        </div>
+        <!-- Colonne Droite : Instructions PayPal -->
+        <div class="paypal-confirm-container" id="paypal-confirm-step" style="display: none;">
+            <div class="paypal-confirm-header">
+                <h3 style="color: var(--text-primary); font-size: 1.2rem; display: flex; align-items: center; gap: 10px; margin: 0;">
+                    Confirmer et payer
+                </h3>
+            </div>
+            
+            <div class="paypal-account-card">
+                <div class="paypal-account-info">
+                    <img src="img/paypal.png" alt="PayPal" style="width: 2.2rem; height: 2.2rem; object-fit: contain; background: #fff; padding: 5px; border-radius: 8px;">
+                    <div>
+                        <h4>PayPal Payment</h4>
+                        <p>fpbsnlua@gmail.com</p>
+                    </div>
+                </div>
+                <div class="paypal-amount" id="paypal-amount-display">19.99 €</div>
+            </div>
+
+            <div class="paypal-copy-box">
+                <span class="label">Email:</span>
+                <span class="value" id="paypal-email-value">fpbsnlua@gmail.com</span>
+                <button class="copy-btn" onclick="copyToClipboard('fpbsnlua@gmail.com')"><i class="fa-regular fa-copy"></i></button>
+            </div>
+
+            <button class="paypal-open-btn" onclick="window.open('https://www.paypal.com/myaccount/transfer/homepage', '_blank')">
+                Ouvrir PayPal <i class="fa-solid fa-arrow-up-right-from-square"></i>
+            </button>
+
+            <div class="paypal-warning-note">
+                <h4><i class="fa-solid fa-triangle-exclamation"></i> AJOUTEZ UNE NOTE AU PAIEMENT, SINON IL SERA IGNORÉ.</h4>
+                <p>Assurez-vous d'envoyer à un ami ou à la famille et d'ajouter la note, sinon votre commande ne sera pas traitée automatiquement.</p>
+                <div class="paypal-copy-box" style="margin-top: 15px; margin-bottom: 0;">
+                    <span class="label">Note:</span>
+                    <span class="value" id="paypal-note-value">spotify</span>
+                    <button class="copy-btn" id="paypal-note-copy-btn" onclick="copyToClipboard('spotify')"><i class="fa-regular fa-copy"></i></button>
+                </div>
+            </div>
+
+            <div class="paypal-steps-list">
+                <h4>COMMENT PAYER</h4>
+                <ol>
+                    <li>Connectez-vous à votre compte PayPal</li>
+                    <li>Sélectionnez "Envoyer et demander" puis "Envoyer"</li>
+                    <li>Entrez l'adresse e-mail indiquée ci-dessus (fpbsnlua@gmail.com)</li>
+                    <li>Sélectionnez "Envoyer à un ami" (Amis et proches)</li>
+                    <li>Entrez le montant exact : <strong id="paypal-step-amount">19.99 €</strong></li>
+                    <li>Ajoutez la note <strong id="paypal-step-note">"spotify"</strong> dans le champ "À quoi sert ce paiement ?"</li>
+                    <li>Complétez le paiement. Ouvrez un ticket Discord en cas de besoin.</li>
+                </ol>
+            </div>
+            
+            <!-- Zone d'attente automatique -->
+            <div id="paypal-waiting-area" style="margin-top: 24px; background: rgba(168,85,247,0.07); border: 1px solid rgba(168,85,247,0.25); border-radius: 12px; padding: 24px; text-align: center;">
+                <div style="display: flex; align-items: center; justify-content: center; gap: 12px; margin-bottom: 10px;">
+                    <div id="paypal-spinner" style="width: 22px; height: 22px; border: 3px solid rgba(168,85,247,0.3); border-top-color: #a855f7; border-radius: 50%; animation: spin 0.9s linear infinite;"></div>
+                    <span style="color: #a855f7; font-weight: 600; font-size: 1rem;">En attente de votre paiement...</span>
+                </div>
+                <p style="color: var(--text-secondary); font-size: 0.82rem; margin: 0;">Une fois votre paiement reçu, vous serez redirigé automatiquement. Cela peut prendre 1-2 minutes.</p>
+            </div>
+            <style>@keyframes spin { to { transform: rotate(360deg); } }</style>
+        </div>
+        </div>
+    </div>
+
+    <script>
+        // Gestion visuelle du choix de paiement
+        document.querySelectorAll('input[name="payment_method"]').forEach(radio => {
+            radio.addEventListener('change', (e) => {
+                document.querySelectorAll('.payment-card').forEach(card => card.classList.remove('active'));
+                e.target.closest('.payment-card').classList.add('active');
+            });
+        });
+
+        const API = window.location.protocol === 'file:' ? 'http://localhost:3000' : '';
+
+        // Initialisation de l'utilisateur (nom et avatar)
+        async function initCheckoutUser() {
+            const token = localStorage.getItem('token');
+            if (!token) return;
+
+            const badge = document.getElementById('checkout-user-badge');
+            const usernameEl = document.getElementById('checkout-username');
+            const avatarWrapper = document.getElementById('checkout-user-avatar');
+
+            if (!badge || !usernameEl || !avatarWrapper) return;
+
+            // 1. Rendu instantané depuis le cache local (pour éviter tout jank visuel)
+            const userStr = localStorage.getItem('user');
+            let cachedUser = null;
+            if (userStr) {
+                try {
+                    cachedUser = JSON.parse(userStr);
+                    usernameEl.textContent = cachedUser.username || 'Client';
+                    badge.style.display = 'flex';
+
+                    const initial = cachedUser.username ? cachedUser.username.charAt(0).toUpperCase() : '?';
+                    avatarWrapper.textContent = initial;
+                    avatarWrapper.style.background = 'linear-gradient(135deg, hsl(270, 95%, 60%) 0%, hsl(285, 100%, 65%) 100%)';
+
+                    const discordId = cachedUser.discord_id;
+                    if (discordId && /^\d+$/.test(discordId)) {
+                        let defaultIdx = 0;
+                        try {
+                            defaultIdx = Number((BigInt(discordId) >> 22n) % 6n);
+                        } catch(e) {}
+                        const defaultUrl = `https://cdn.discordapp.com/embed/avatars/${defaultIdx}.png`;
+                        const proxyUrl = `${API}/api/auth/discord-avatar/${discordId}`;
+                        const imgStyle = 'width:100%; height:100%; object-fit:cover; border-radius:50%;';
+
+                        avatarWrapper.innerHTML = `<img src="${proxyUrl}" style="${imgStyle}" onerror="this.onerror=null; this.src='${defaultUrl}';" />`;
+                        avatarWrapper.style.background = 'transparent';
+                    }
+                } catch(e) {
+                    console.warn('Erreur parsing cache utilisateur:', e);
+                }
+            }
+
+            // 2. Récupération des données fraîches depuis le serveur
+            try {
+                const res = await fetch(`${API}/api/me`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    const user = data.user;
+                    localStorage.setItem('user', JSON.stringify(user));
+
+                    usernameEl.textContent = user.username || 'Client';
+                    badge.style.display = 'flex';
+
+                    const initial = user.username ? user.username.charAt(0).toUpperCase() : '?';
+                    avatarWrapper.textContent = initial;
+                    avatarWrapper.style.background = 'linear-gradient(135deg, hsl(270, 95%, 60%) 0%, hsl(285, 100%, 65%) 100%)';
+
+                    const discordId = user.discord_id;
+                    let defaultIdx = 0;
+                    if (discordId && /^\d+$/.test(discordId)) {
+                        try {
+                            defaultIdx = Number((BigInt(discordId) >> 22n) % 6n);
+                        } catch(e) {}
+                    }
+                    const defaultUrl = `https://cdn.discordapp.com/embed/avatars/${defaultIdx}.png`;
+                    const proxyUrl = discordId && /^\d+$/.test(discordId) ? `${API}/api/auth/discord-avatar/${discordId}` : defaultUrl;
+                    const imgStyle = 'width:100%; height:100%; object-fit:cover; border-radius:50%;';
+
+                    function updateImg(url) {
+                        avatarWrapper.innerHTML = `<img src="${url}" style="${imgStyle}" onerror="this.onerror=null; this.src='${defaultUrl}';" />`;
+                        avatarWrapper.style.background = 'transparent';
+                    }
+
+                    // Définir l'url du proxy ou par défaut
+                    updateImg(proxyUrl);
+
+                    // Tenter de charger l'avatar réel depuis l'API bot discord si possible
+                    if (discordId && /^\d+$/.test(discordId)) {
+                        try {
+                            const avatarRes = await fetch(`${API}/api/me/discord-avatar`, {
+                                headers: { 'Authorization': `Bearer ${token}` }
+                            });
+                            if (avatarRes.ok) {
+                                const avatarData = await avatarRes.json();
+                                if (avatarData.avatarUrl) {
+                                    updateImg(avatarData.avatarUrl);
+                                }
+                            }
+                        } catch(err) {
+                            console.warn('Erreur avatar temps réel:', err);
+                        }
+                    }
+                }
+            } catch(err) {
+                console.error('Erreur rafraîchissement utilisateur checkout:', err);
+            }
+        }
+
+        function logoutCheckout() {
+            localStorage.clear();
+            window.location.href = 'admin-login.html';
+        }
+
+        // Exécuter l'initialisation au chargement de la page
+        initCheckoutUser();
+
+        // Récupération dynamique des infos du produit via l'URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const productName = urlParams.get('name') || 'Ghost Lua';
+        const productPrice = urlParams.get('price') || '19.99';
+        const productImage = urlParams.get('image') || 'ghost_lua.jpg';
+        const stripeLink = urlParams.get('link') || 'https://buy.stripe.com/bJe6oJ50EceP1Vqbmz9Ve00';
+
+        // Variables d'état des prix
+        const originalPrice = parseFloat(productPrice) || 19.99;
+        let discountedPrice = originalPrice;
+        let activeCoupon = null;
+
+        // Mise à jour de l'interface
+        document.getElementById('summary-name').innerHTML = `${productName} <span>x1</span>`;
+        document.getElementById('summary-price').textContent = `${originalPrice.toFixed(2)} €`;
+        document.getElementById('summary-subtotal').textContent = `${originalPrice.toFixed(2)} €`;
+        document.getElementById('summary-final').textContent = `${originalPrice.toFixed(2)} €`;
+        document.getElementById('summary-total').textContent = `${originalPrice.toFixed(2)} €`;
+        document.getElementById('summary-image').src = productImage;
+
+        // Validation du coupon
+        const couponBtn = document.querySelector('.btn-coupon');
+        const couponInput = document.getElementById('coupon');
+
+        if (couponBtn && couponInput) {
+            couponBtn.addEventListener('click', async () => {
+                const code = couponInput.value.trim();
+                if (!code) return;
+
+                couponBtn.disabled = true;
+                couponBtn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i>';
+
+                try {
+                    const res = await fetch(`${API}/api/promocodes/validate`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ code })
+                    });
+
+                    if (res.ok) {
+                        const data = await res.json();
+                        const promo = data.promocode;
+                        activeCoupon = promo;
+
+                        // Calcul de la remise
+                        if (promo.type === 'percentage') {
+                            const discount = originalPrice * (promo.value / 100);
+                            discountedPrice = Math.max(0, originalPrice - discount);
+                        } else {
+                            discountedPrice = Math.max(0, originalPrice - promo.value);
+                        }
+                        
+                        // Arrondir à 2 décimales
+                        discountedPrice = Math.round(discountedPrice * 100) / 100;
+
+                        // Visual feedback handled by DOM updates below
+                        // Update DOM elements
+                        const formattedPrice = discountedPrice.toFixed(2);
+                        document.getElementById('summary-final').textContent = `${formattedPrice} €`;
+                        document.getElementById('summary-total').textContent = `${formattedPrice} €`;
+                        
+                        // Add discount row in totals if it doesn't exist
+                        let discountRow = document.getElementById('summary-discount-row');
+                        if (!discountRow) {
+                            discountRow = document.createElement('div');
+                            discountRow.id = 'summary-discount-row';
+                            discountRow.className = 'summary-row';
+                            discountRow.style.color = '#10b981';
+                            discountRow.style.fontWeight = '600';
+                            
+                            const totalsContainer = document.querySelector('.summary-totals');
+                            const finalRow = document.querySelector('.total-row');
+                            totalsContainer.insertBefore(discountRow, finalRow);
+                        }
+                        const savings = (originalPrice - discountedPrice).toFixed(2);
+                        discountRow.innerHTML = `<span>Remise (${promo.code})</span><span>-${savings} €</span>`;
+                        
+                    } else {
+                        const err = await res.json();
+                        alert(err.error || 'Code promo invalide ou expiré.');
+                    }
+                } catch (err) {
+                    console.error(err);
+                    alert('Erreur lors de la validation du code promo.');
+                } finally {
+                    couponBtn.disabled = false;
+                    couponBtn.innerHTML = 'Appliquer <i class="fa-solid fa-arrow-right"></i>';
+                }
+            });
+        }
+
+        // Soumission du formulaire
+        document.getElementById('checkout-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            const token = localStorage.getItem('token');
+            if (!token) {
+                alert('Veuillez vous connecter ou créer un compte avant de procéder au paiement.');
+                localStorage.setItem('redirect_after_login', window.location.href);
+                window.location.href = 'admin-login.html';
+                return;
+            }
+
+            const method = document.querySelector('input[name="payment_method"]:checked').value;
+            localStorage.setItem('payment_method', method);
+            
+            // Simulation d'une étape de chargement avant redirection
+            const btn = document.querySelector('.checkout-submit-btn');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Traitement...';
+            btn.style.opacity = '0.8';
+            btn.disabled = true;
+
+            setTimeout(() => {
+                const userEmail = document.getElementById('email').value || '';
+                localStorage.setItem('checkout_email', userEmail);
+                
+                if(method === 'stripe' && stripeLink) {
+                    let redirectUrl = stripeLink;
+                    if (activeCoupon) {
+                        const separator = redirectUrl.includes('?') ? '&' : '?';
+                        redirectUrl = `${redirectUrl}${separator}prefilled_promo_code=${activeCoupon.code}`;
+                    }
+                    window.location.href = redirectUrl; // Redirection vers le vrai lien Stripe
+                } else if (method === 'paypal') {
+                    // Générer un mot simple aléatoire pour la note
+                    const simpleWords = ['spotify', 'netflix', 'pizza', 'burger', 'cafe', 'cadeau', 'remboursement', 'repas', 'vacances', 'abonnement'];
+                    const randomNote = simpleWords[Math.floor(Math.random() * simpleWords.length)];
+
+                    document.getElementById('checkout-form-container').style.display = 'none';
+                    document.getElementById('paypal-confirm-step').style.display = 'block';
+                    document.getElementById('paypal-amount-display').textContent = `${discountedPrice.toFixed(2)} €`;
+                    document.getElementById('paypal-step-amount').textContent = `${discountedPrice.toFixed(2)} €`;
+                    
+                    // Appliquer la note dynamique
+                    document.getElementById('paypal-note-value').textContent = randomNote;
+                    document.getElementById('paypal-step-note').textContent = `"${randomNote}"`;
+                    document.getElementById('paypal-note-copy-btn').setAttribute('onclick', `copyToClipboard('${randomNote}')`);
+
+                    // Sauvegarder la note et lancer le polling automatique
+                    localStorage.setItem('paypal_pending_note', randomNote);
+                    localStorage.setItem('paypal_pending_product', productName);
+                    // Enregistrer la note en base de données pour le suivi admin
+                    const token = localStorage.getItem('token');
+                    if (token) {
+                        fetch(`${API}/api/payments/register-note`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                            body: JSON.stringify({ note: randomNote })
+                        }).catch(() => {});
+                    }
+                    startPaypalPolling(randomNote, productName);
+
+                    btn.innerHTML = originalText;
+                    btn.style.opacity = '1';
+                    btn.disabled = false;
+                }
+            }, 1000);
+        });
+
+        // ─── POLLING AUTOMATIQUE PAYPAL ──────────────────────────────────────────
+        let paypalPollingInterval = null;
+        function startPaypalPolling(note, product) {
+            if (paypalPollingInterval) clearInterval(paypalPollingInterval);
+            paypalPollingInterval = setInterval(async () => {
+                try {
+                    const token = localStorage.getItem('token');
+                    const res = await fetch(`${API}/api/payments/check-note?note=${encodeURIComponent(note)}`, {
+                        headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+                    });
+                    if (!res.ok) return;
+                    const data = await res.json();
+                    if (data.confirmed) {
+                        clearInterval(paypalPollingInterval);
+                        // Mettre à jour le spinner
+                        document.getElementById('paypal-spinner').style.borderTopColor = '#22c55e';
+                        document.querySelector('#paypal-waiting-area span').textContent = '✅ Paiement confirmé ! Redirection...';
+                        setTimeout(() => {
+                            window.location.href = 'success.html?name=' + encodeURIComponent(product);
+                        }, 1500);
+                    }
+                } catch(e) {}
+            }, 5000);
+        }
+
+        // Fonction pour copier dans le presse-papier
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                alert('Copié : ' + text);
+            });
+        }
+    </script>
+</body>
+</html>

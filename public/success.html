@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Paiement Réussi | Ghost Shop</title>
+    <link rel="stylesheet" href="styles.css?v=6">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .success-card {
+            background: var(--bg-glass);
+            border: 1px solid var(--border-medium);
+            border-radius: 16px;
+            max-width: 580px;
+            width: 100%;
+            padding: 52px 44px;
+            text-align: center;
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.6), 0 0 40px rgba(16, 185, 129, 0.08);
+            position: relative;
+            z-index: 10;
+            animation: cardSlideIn 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+
+        @keyframes cardSlideIn {
+            from { transform: translateY(30px); opacity: 0; }
+            to   { transform: translateY(0);    opacity: 1; }
+        }
+
+        .success-icon-wrapper {
+            width: 88px;
+            height: 88px;
+            border-radius: 50%;
+            background: rgba(16, 185, 129, 0.12);
+            border: 2px solid var(--accent-green);
+            color: var(--accent-green);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.8rem;
+            margin: 0 auto 28px auto;
+            box-shadow: 0 0 30px rgba(16, 185, 129, 0.25);
+            animation: popIn 0.5s 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
+        }
+
+        @keyframes popIn {
+            0%   { transform: scale(0); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .success-title {
+            font-size: 2rem;
+            font-weight: 800;
+            margin-bottom: 14px;
+            background: linear-gradient(90deg, #fff, var(--text-secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .success-description {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            line-height: 1.7;
+            margin-bottom: 32px;
+        }
+
+        /* ── Key Block ─────────────────────────────────────── */
+        .key-block {
+            background: rgba(16, 185, 129, 0.06);
+            border: 1px solid rgba(16, 185, 129, 0.25);
+            border-radius: 10px;
+            padding: 20px 24px;
+            margin-bottom: 28px;
+            text-align: left;
+            display: none;
+        }
+
+        .key-block.visible { display: block; animation: fadeInUp 0.4s ease; }
+
+        @keyframes fadeInUp {
+            from { transform: translateY(10px); opacity: 0; }
+            to   { transform: translateY(0);    opacity: 1; }
+        }
+
+        .key-label {
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: var(--accent-green);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 7px;
+        }
+
+        .key-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .key-value {
+            font-family: var(--font-mono);
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            letter-spacing: 2px;
+            flex: 1;
+            user-select: all;
+        }
+
+        .copy-key-btn {
+            background: rgba(16, 185, 129, 0.15);
+            border: 1px solid rgba(16, 185, 129, 0.35);
+            color: var(--accent-green);
+            padding: 8px 14px;
+            border-radius: 9999px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 600;
+            transition: var(--transition-fast);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            white-space: nowrap;
+        }
+
+        .copy-key-btn:hover {
+            background: rgba(16, 185, 129, 0.25);
+            transform: translateY(-1px);
+        }
+
+        .key-warning {
+            margin-top: 12px;
+            font-size: 0.78rem;
+            color: var(--text-muted);
+            display: flex;
+            align-items: flex-start;
+            gap: 6px;
+        }
+
+        .key-warning i { color: var(--accent-orange); margin-top: 2px; flex-shrink: 0; }
+
+        /* ── Loading / Error states ─────────────────────────── */
+        .key-loading {
+            display: none;
+            padding: 18px;
+            border-radius: 10px;
+            background: rgba(124, 58, 237, 0.06);
+            border: 1px solid rgba(124, 58, 237, 0.2);
+            margin-bottom: 28px;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+        }
+
+        .key-loading.visible { display: flex; }
+
+        .spinner {
+            width: 22px; height: 22px;
+            border: 3px solid rgba(124, 58, 237, 0.3);
+            border-top-color: var(--accent-purple);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            flex-shrink: 0;
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .key-not-logged {
+            display: none;
+            padding: 18px 20px;
+            border-radius: 10px;
+            background: rgba(251, 146, 60, 0.06);
+            border: 1px solid rgba(251, 146, 60, 0.25);
+            margin-bottom: 28px;
+            font-size: 0.88rem;
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+
+        .key-not-logged.visible { display: block; }
+        .key-not-logged strong { color: var(--accent-orange); }
+
+        /* ── Actions ────────────────────────────────────────── */
+        .success-actions { display: flex; flex-direction: column; gap: 12px; }
+
+        .btn-success-primary {
+            background: linear-gradient(135deg, var(--accent-purple), var(--accent-cyan));
+            color: white;
+            padding: 15px 24px;
+            border-radius: 9999px;
+            font-weight: 700;
+            font-size: 0.95rem;
+            text-transform: uppercase;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            box-shadow: var(--glow-shadow-purple);
+            transition: var(--transition-smooth);
+        }
+
+        .btn-success-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 0 30px var(--accent-purple), 0 0 10px var(--accent-cyan);
+            filter: brightness(1.1);
+        }
+
+        .btn-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .btn-success-secondary {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border-medium);
+            color: var(--text-primary);
+            padding: 13px 16px;
+            border-radius: 9999px;
+            font-weight: 600;
+            font-size: 0.88rem;
+            text-transform: uppercase;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: var(--transition-smooth);
+        }
+
+        .btn-success-secondary:hover {
+            background: var(--bg-surface-elevated);
+            border-color: var(--text-secondary);
+            transform: translateY(-2px);
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-glow-wrapper">
+        <div class="gradient-bg-glow-1"></div>
+        <div class="gradient-bg-glow-2"></div>
+    </div>
+
+    <div class="success-card">
+        <div class="success-icon-wrapper">
+            <i class="fa-solid fa-check"></i>
+        </div>
+
+        <h1 class="success-title">Merci pour votre achat !</h1>
+        <p class="success-description" id="success-desc">
+            Votre paiement a été traité avec succès.<br>
+            Votre clé de licence a été générée et associée à votre compte.
+        </p>
+
+        <!-- État : chargement -->
+        <div class="key-loading visible" id="key-loading">
+            <div class="spinner"></div>
+            <span>Génération de votre clé en cours...</span>
+        </div>
+
+        <!-- État : non connecté -->
+        <div class="key-not-logged" id="key-not-logged" style="text-align: center;">
+            <strong><i class="fa-solid fa-user-lock"></i> Vous n'êtes pas connecté</strong><br>
+            <p style="margin: 10px 0 20px 0;">Connectez-vous à votre compte pour que votre clé soit générée et associée automatiquement.</p>
+            
+            <div style="background: rgba(10, 10, 18, 0.5); padding: 20px; border-radius: 8px; border: 1px solid var(--border-medium); margin-bottom: 15px;">
+                <input type="text" id="login-username" placeholder="Nom d'utilisateur" style="width: 100%; padding: 12px; margin-bottom: 10px; border-radius: 6px; border: 1px solid var(--border-medium); background: var(--bg-surface-elevated); color: white;">
+                <input type="password" id="login-password" placeholder="Mot de passe" style="width: 100%; padding: 12px; margin-bottom: 15px; border-radius: 6px; border: 1px solid var(--border-medium); background: var(--bg-surface-elevated); color: white;">
+                
+                <div id="login-error" style="color: #ef4444; font-size: 0.85rem; margin-bottom: 10px; display: none;">Identifiants invalides.</div>
+                
+                <button onclick="loginAndConfirm()" id="login-btn" style="width: 100%; background: linear-gradient(135deg, var(--accent-purple), var(--accent-cyan)); color: white; border: none; padding: 12px; border-radius: 9999px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                    Se connecter et récupérer ma clé <i class="fa-solid fa-arrow-right"></i>
+                </button>
+            </div>
+            
+            <p style="font-size: 0.85rem;">Pas encore de compte ? <a href="index.html#mon-compte" style="color: var(--accent-cyan);">Inscrivez-vous ici</a> puis revenez sur cette page.</p>
+        </div>
+
+        <!-- État : succès de génération (sans afficher la clé) -->
+        <div class="key-block" id="key-success" style="display: none; background: rgba(16, 185, 129, 0.06); border: 1px solid rgba(16, 185, 129, 0.25); border-radius: 10px; padding: 20px 24px; margin-bottom: 28px; text-align: center;">
+            <i class="fa-solid fa-check-circle" style="color: var(--accent-green); font-size: 2rem; margin-bottom: 10px;"></i>
+            <h3 style="color: var(--text-primary); margin-bottom: 5px;">Clé générée avec succès !</h3>
+            <p style="color: var(--text-secondary); font-size: 0.9rem;">Votre clé de licence a été automatiquement ajoutée à votre compte. Vous pouvez maintenant la retrouver et la configurer dans votre tableau de bord.</p>
+        </div>
+
+        <!-- VIP Custom Instructions -->
+        <div class="key-block" id="vip-instructions" style="display: none; background: rgba(168, 85, 247, 0.05); border: 1px solid rgba(168, 85, 247, 0.25); border-radius: 12px; padding: 24px; text-align: left; margin-bottom: 28px;">
+            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 12px;">
+                <div style="width: 42px; height: 42px; border-radius: 50%; background: rgba(168, 85, 247, 0.15); display: flex; align-items: center; justify-content: center; color: #a855f7; font-size: 1.3rem;">
+                    <i class="fa-solid fa-crown"></i>
+                </div>
+                <div>
+                    <h3 style="color: var(--text-primary); font-size: 1.1rem; font-weight: 700; margin: 0;">👑 Statut V.I.P. en attente</h3>
+                    <p style="color: var(--text-muted); font-size: 0.78rem; margin: 0;">Suivez ces étapes pour finaliser votre commande</p>
+                </div>
+            </div>
+
+            <div style="color: var(--text-primary); font-size: 0.9rem; line-height: 1.6; display: flex; flex-direction: column; gap: 14px;">
+                <div style="display: flex; gap: 12px;">
+                    <span style="background: rgba(168, 85, 247, 0.2); color: #a855f7; font-weight: 700; font-size: 0.8rem; width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 2px;">1</span>
+                    <div>
+                        <strong>Une fois le paiement effectué, ouvrez un ticket sur le service Discord.</strong>
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 12px;">
+                    <span style="background: rgba(168, 85, 247, 0.2); color: #a855f7; font-weight: 700; font-size: 0.8rem; width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 2px;">2</span>
+                    <div>
+                        <strong>Dans le ticket, envoyez :</strong>
+                        <ul style="margin: 6px 0 0 16px; padding: 0; list-style-type: disc; color: var(--text-secondary); font-size: 0.85rem; display: flex; flex-direction: column; gap: 4px;">
+                            <li>L’e-mail utilisé avec lequel a été effectué l’achat (une capture d'écran du paiement),</li>
+                            <li>Le code souhaité,</li>
+                            <li>La bannière souhaitée.</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 12px;">
+                    <span style="background: rgba(168, 85, 247, 0.2); color: #a855f7; font-weight: 700; font-size: 0.8rem; width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 2px;">3</span>
+                    <div>
+                        <strong>Attendez la vérification de votre achat par l'équipe avant de recevoir votre rôle V.I.P.</strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="success-actions">
+            <a href="dashboard.html" class="btn-success-primary">
+                <i class="fa-solid fa-gauge"></i> Mon Espace Membre
+            </a>
+            <div class="btn-grid">
+                <a href="index.html" class="btn-success-secondary">
+                    <i class="fa-solid fa-house"></i> Boutique
+                </a>
+                <a href="https://discord.gg/yrjffGSnr2" target="_blank" class="btn-success-secondary" style="color: #5865F2; border-color: rgba(88,101,242,0.3);">
+                    <i class="fa-brands fa-discord"></i> Discord
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API = window.location.protocol === 'file:' ? 'http://localhost:3000' : '';
+
+        async function loginAndConfirm() {
+            const username = document.getElementById('login-username').value;
+            const password = document.getElementById('login-password').value;
+            const btn = document.getElementById('login-btn');
+            const errorDiv = document.getElementById('login-error');
+
+            if (!username || !password) {
+                errorDiv.textContent = 'Veuillez remplir tous les champs.';
+                errorDiv.style.display = 'block';
+                return;
+            }
+
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Connexion...';
+            errorDiv.style.display = 'none';
+
+            try {
+                // 1. Connexion
+                const loginRes = await fetch(`${API}/api/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+                
+                const loginData = await loginRes.json();
+
+                if (!loginRes.ok) {
+                    errorDiv.textContent = loginData.error || 'Erreur de connexion.';
+                    errorDiv.style.display = 'block';
+                    btn.disabled = false;
+                    btn.innerHTML = 'Se connecter et récupérer ma clé <i class="fa-solid fa-arrow-right"></i>';
+                    return;
+                }
+
+                // 2. Sauvegarde du token localement
+                localStorage.setItem('token', loginData.token);
+                localStorage.setItem('user', JSON.stringify(loginData.user));
+
+                // 3. Masquer le form et afficher le loading, puis générer la clé
+                document.getElementById('key-not-logged').classList.remove('visible');
+                document.getElementById('key-loading').classList.add('visible');
+                
+                await confirmPayment();
+
+            } catch (err) {
+                console.error(err);
+                errorDiv.textContent = 'Erreur réseau.';
+                errorDiv.style.display = 'block';
+                btn.disabled = false;
+                btn.innerHTML = 'Se connecter et récupérer ma clé <i class="fa-solid fa-arrow-right"></i>';
+            }
+        }
+
+        async function confirmPayment() {
+            // Note: your login script sets 'token' in localStorage
+            const token = localStorage.getItem('token');
+
+            if (!token) {
+                document.getElementById('key-loading').classList.remove('visible');
+                document.getElementById('key-not-logged').classList.add('visible');
+                return;
+            }
+
+            try {
+                const paymentEmail = localStorage.getItem('checkout_email') || '';
+                const paymentMethod = localStorage.getItem('payment_method') || 'stripe';
+                const res = await fetch(`${API}/api/payments/confirm`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ 
+                        payment_email: paymentEmail,
+                        payment_method: paymentMethod
+                    })
+                });
+
+                const data = await res.json();
+                document.getElementById('key-loading').classList.remove('visible');
+
+                if (res.ok) {
+                    document.getElementById('key-success').classList.add('visible');
+                } else {
+                    // Afficher une erreur légère mais ne pas bloquer la page
+                    document.getElementById('key-not-logged').innerHTML = `<strong><i class="fa-solid fa-circle-exclamation"></i> Erreur</strong><br>${data.error || 'Impossible de générer votre clé. Rendez-vous dans votre espace membre.'}`;
+                    document.getElementById('key-not-logged').classList.add('visible');
+                }
+            } catch (err) {
+                document.getElementById('key-loading').classList.remove('visible');
+                document.getElementById('key-not-logged').innerHTML = `<strong><i class="fa-solid fa-circle-exclamation"></i> Erreur réseau</strong><br>Impossible de contacter le serveur. Votre clé est accessible dans votre espace membre.`;
+                document.getElementById('key-not-logged').classList.add('visible');
+            }
+        }
+
+        // Parse URL params to check if it's a VIP purchase
+        const urlParams = new URLSearchParams(window.location.search);
+        const productName = urlParams.get('name') || '';
+        const isVIP = productName.toUpperCase().includes('VIP');
+
+        if (isVIP) {
+            // VIP Flow: Hide key generation loader/login forms and display beautiful custom instructions
+            document.getElementById('key-loading').classList.remove('visible');
+            document.getElementById('key-loading').style.display = 'none';
+            document.getElementById('key-not-logged').classList.remove('visible');
+            document.getElementById('key-not-logged').style.display = 'none';
+            document.getElementById('vip-instructions').style.display = 'block';
+            document.getElementById('success-desc').innerHTML = 'Votre paiement a été traité avec succès.<br>Veuillez suivre les instructions ci-dessous pour finaliser votre commande.';
+        } else {
+            // Standard Flow: Automatically link/generate product key
+            confirmPayment();
+        }
+    </script>
+</body>
+</html>

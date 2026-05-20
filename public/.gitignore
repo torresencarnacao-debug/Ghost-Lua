@@ -1,0 +1,23 @@
+# ─── Variables d'environnement (JAMAIS sur GitHub) ───────────────────────────
+.env
+.env.local
+.env.production
+.env.*
+
+# ─── Dépendances Node ─────────────────────────────────────────────────────────
+node_modules/
+npm-debug.log*
+yarn-error.log*
+
+# ─── Fichiers système ─────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ─── Logs ─────────────────────────────────────────────────────────────────────
+*.log
+logs/
+
+# ─── Build ────────────────────────────────────────────────────────────────────
+dist/
+build/

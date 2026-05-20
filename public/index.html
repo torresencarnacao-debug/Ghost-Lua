@@ -1,137 +1,266 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Ghost Dashboard — Connexion</title>
-  <meta name="description" content="Connectez-vous ou créez un compte pour accéder au dashboard." />
-  <link rel="stylesheet" href="/css/style.css" />
-  <link rel="stylesheet" href="/css/auth.css" />
-  <script src="/js/particles.js" defer></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Ghost Shop - Des produits Lua FiveM premium de qualité supérieure et 100% configurables pour vos serveurs ESX & QB-Core.">
+    <title>Ghost Shop | Produits FiveM Lua Premium</title>
+    
+    <!-- CSS Custom stylesheet -->
+    <link rel="stylesheet" href="styles.css?v=4">
+    
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
-  <!-- Background -->
-  <div class="bg-orbs">
-    <div class="bg-orb"></div>
-    <div class="bg-orb"></div>
-    <div class="bg-orb"></div>
-  </div>
 
-  <!-- Auth Container -->
-  <div class="auth-page">
-    <div class="auth-brand">
-      <img src="/img/logo.png" alt="Ghost Lua Logo" class="auth-logo" />
-      <h1 class="auth-brand-name">Ghost Dashboard</h1>
-      <p class="auth-brand-sub">Votre espace personnel sécurisé</p>
+    <!-- Blurry Ambient Background Spots -->
+    <div class="bg-glow-wrapper">
+        <div class="gradient-bg-glow-1"></div>
+        <div class="gradient-bg-glow-2"></div>
+    </div>
+    
+    <!-- Canvas layer for background cyber particles -->
+    <canvas id="particles-canvas"></canvas>
+
+    <!-- Navigation Header -->
+    <header id="navbar">
+        <div class="nav-container">
+            <a href="#" class="logo">
+                <img src="img/logo.png" alt="Ghost Shop Logo" class="logo-img"><span>Ghost</span>Shop
+            </a>
+            <ul class="nav-links" style="position: absolute; left: 50%; transform: translateX(-50%);">
+                <li><a href="#hero" class="active-link">Accueil</a></li>
+                <li><a href="#scripts">Produits</a></li>
+            </ul>
+            <div style="display: flex; gap: 10px; align-items: center; position: absolute; right: 40px;">
+                <button class="nav-btn" onclick="window.open('https://discord.gg/yrjffGSnr2', '_blank')">
+                    <i class="fa-brands fa-discord"></i> Discord
+                </button>
+                <button class="nav-btn" style="background: rgba(168, 85, 247, 0.1); border-color: rgba(168, 85, 247, 0.5); color: var(--accent-purple);" onclick="window.location.href='admin-login.html'">
+                    <i class="fa-solid fa-user"></i> Mon Compte
+                </button>
+            </div>
+            <div class="menu-toggle" id="menu-toggle-btn">
+                <i class="fa-solid fa-bars"></i>
+            </div>
+        </div>
+    </header>
+
+    <!-- Mobile Drawer Navigation -->
+    <div class="mobile-nav" id="mobile-drawer">
+        <ul class="mobile-nav-links">
+            <li><a href="#hero" onclick="toggleMobileMenu()">Accueil</a></li>
+            <li><a href="#scripts" onclick="toggleMobileMenu()">Produits</a></li>
+            <li><a href="admin-login.html" onclick="toggleMobileMenu()" style="color: var(--accent-purple);"><i class="fa-solid fa-user"></i> Mon Compte</a></li>
+            <li><a href="https://discord.gg/yrjffGSnr2" target="_blank" onclick="toggleMobileMenu()"><i class="fa-brands fa-discord"></i> Support Discord</a></li>
+        </ul>
     </div>
 
-    <div class="auth-card glass">
-      <!-- Tabs -->
-      <div class="auth-tabs">
-        <button id="tab-login" class="auth-tab active" onclick="switchTab('login')">
-          🔐 Connexion
-        </button>
-        <button id="tab-register" class="auth-tab" onclick="switchTab('register')">
-          ✨ Inscription
-        </button>
-      </div>
-
-      <!-- Alert -->
-      <div id="alert-box" style="display:none;" class="alert" role="alert"></div>
-
-      <!-- LOGIN FORM -->
-      <form id="login-form" class="auth-form" onsubmit="handleLogin(event)">
-        <div class="form-group">
-          <label class="form-label" for="login-username">Nom d'utilisateur</label>
-          <div class="input-wrapper">
-            <span class="input-icon">👤</span>
-            <input id="login-username" type="text" class="form-input" placeholder="Votre username" autocomplete="username" required />
-          </div>
+    <!-- Hero Section -->
+    <section class="hero" id="hero">
+        <div class="hero-grid">
+            <div class="hero-content">
+                <div class="hero-badge">
+                    <i class="fa-solid fa-circle-nodes"></i> Version 2.4.0 disponible
+                </div>
+                <h1>
+                    <span class="gradient-text-2">Ghost Shop</span>
+                </h1>
+                <div class="hero-btns">
+                    <a href="#scripts" class="btn-primary">
+                        <i class="fa-solid fa-box-open"></i> Découvrir nos produits
+                    </a>
+                    <a href="https://discord.gg/yrjffGSnr2" target="_blank" class="btn-secondary">
+                        <i class="fa-brands fa-discord"></i> Rejoindre le Discord
+                    </a>
+                </div>
+                <div class="hero-stats">
+                    <div class="stat-item">
+                        <h3>24/7</h3>
+                        <p>Support</p>
+                    </div>
+                    <div class="stat-item">
+                        <h3>100%</h3>
+                        <p>Qualité</p>
+                    </div>
+                    <div class="stat-item">
+                        <h3>10+</h3>
+                        <p>Clients Ravis</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="hero-visual">
+                <!-- Cyber terminal mockup -->
+                <div class="terminal-mockup float-anim">
+                    <div class="terminal-header">
+                        <div class="terminal-buttons">
+                            <span class="terminal-btn close"></span>
+                            <span class="terminal-btn minimize"></span>
+                            <span class="terminal-btn maximize"></span>
+                        </div>
+                        <div class="terminal-title">ghost-server-core.lua</div>
+                        <i class="fa-solid fa-code" style="color: var(--text-muted); font-size: 0.8rem;"></i>
+                    </div>
+                    <div class="terminal-body">
+                        <div class="terminal-line green">
+                            <span>[INFO]</span> GhostCore Initialisation...
+                        </div>
+                        <div class="terminal-line purple" style="opacity: 0.8;">
+                            <span>[CREDITS]</span> ─────────────────────────────────
+                        </div>
+                        <div class="terminal-line white" style="padding-left: 15px;">
+                            <span>[+]</span> Menu Lua : <span style="color: var(--accent-cyan); font-weight: bold;">Srt</span>
+                        </div>
+                        <div class="terminal-line white" style="padding-left: 15px;">
+                            <span>[+]</span> Site Internet : <span style="color: var(--accent-pink); font-weight: bold;">Napoléon</span>
+                        </div>
+                        <div class="terminal-line white" style="padding-left: 15px;">
+                            <span>[+]</span> Discord : <span style="color: #a5b4fc; font-weight: bold;">Uhq, Napoléon, Srt</span>
+                        </div>
+                        <div class="terminal-line purple" style="opacity: 0.8; margin-bottom: 12px;">
+                            <span>[CREDITS]</span> ─────────────────────────────────
+                        </div>
+                        <div class="terminal-line white">
+                            <span>[LUA]</span> Chargement du module config.lua... Ok
+                        </div>
+                        <div class="terminal-line purple">
+                            <span>[QBCORE]</span> Framework détecté avec succès !
+                        </div>
+                        <div class="terminal-line white">
+                            <span>[INFO]</span> Démarrage des modules...
+                        </div>
+                        <div class="terminal-line green">
+                                <span>[SUCCESS]</span> Script Ghost_Lua chargé (0.01ms)
+                        </div>
+                        <div class="terminal-line white">
+                            <span>GhostCore</span> > <span class="terminal-cursor"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
+    </section>
 
-        <div class="form-group">
-          <label class="form-label" for="login-password">Mot de passe</label>
-          <div class="input-wrapper">
-            <span class="input-icon">🔒</span>
-            <input id="login-password" type="password" class="form-input" placeholder="Votre mot de passe" autocomplete="current-password" required />
-            <span class="input-toggle" onclick="togglePass('login-password', this)" title="Afficher/Masquer">👁️</span>
-          </div>
+    <!-- Products Catalog Section -->
+    <section id="scripts">
+        <div class="section-header">
+            <span class="section-tag">BOUTIQUE & PORTFOLIO</span>
+            <h2>Nos Produits Premium</h2>
+            <p>Découvrez notre catalogue de produits Lua premium. Tous nos produits disposent de traductions intégrées, d'une configuration illimitée et d'un support réactif.</p>
         </div>
-
-        <div class="form-group" style="flex-direction: row; align-items: center; gap: 8px; margin-bottom: 16px; cursor: pointer; user-select: none;">
-          <input type="checkbox" id="remember-me" style="width: 16px; height: 16px; accent-color: var(--accent-1); cursor: pointer;" />
-          <label for="remember-me" style="font-size: 0.8rem; color: var(--text-secondary); cursor: pointer; font-weight: 500;">Se rappeler de moi</label>
+        
+        <div class="catalog-controls">
+            <div class="filter-pills">
+                <button class="filter-pill active" data-filter="all">💎 PRODUITS LUA PREMIUM</button>
+            </div>
+            
+            <div class="search-wrapper">
+                <i class="fa-solid fa-magnifying-glass"></i>
+                <input type="text" class="search-input" id="search-bar" placeholder="Rechercher un produit...">
+            </div>
         </div>
-
-        <button id="login-btn" type="submit" class="btn btn-primary btn-full">
-          Se connecter
-        </button>
-
-        <p class="auth-switch">
-          Pas encore de compte ?
-          <a href="#" onclick="switchTab('register')">Créer un compte</a>
-        </p>
-      </form>
-
-      <!-- REGISTER FORM -->
-      <form id="register-form" class="auth-form" style="display:none;" onsubmit="handleRegister(event)">
-
-        <div class="form-group">
-          <label class="form-label" for="reg-username">Nom d'utilisateur</label>
-          <div class="input-wrapper">
-            <span class="input-icon">👤</span>
-            <input id="reg-username" type="text" class="form-input" placeholder="3-32 caractères (a-z, 0-9, ._-)" autocomplete="username" required />
-          </div>
+        
+        <!-- Cards Grid Container -->
+        <div class="script-grid" id="scripts-container">
+            <!-- Dynamic elements will be inserted here by app.js -->
         </div>
+    </section>
 
-        <div class="form-group">
-          <label class="form-label" for="reg-password">Mot de passe</label>
-          <div class="input-wrapper">
-            <span class="input-icon">🔒</span>
-            <input id="reg-password" type="password" class="form-input" placeholder="Minimum 6 caractères" autocomplete="new-password" required />
-            <span class="input-toggle" onclick="togglePass('reg-password', this)" title="Afficher/Masquer">👁️</span>
-          </div>
-          <div id="pwd-strength" class="pwd-strength-bar" style="display:none;">
-            <div id="pwd-fill" class="pwd-fill"></div>
-          </div>
-          <span id="pwd-label" class="pwd-label"></span>
+    <!-- Footer -->
+    <footer>
+        <div class="footer-container" style="display: flex; flex-direction: column; align-items: center; text-align: center; gap: 20px; padding: 40px 20px 20px;">
+            <div class="footer-brand" style="max-width: 600px;">
+                <a href="#" class="logo" style="justify-content: center; margin-bottom: 15px;">
+                    <img src="img/logo.png" alt="Ghost Shop Logo" class="logo-img"><span>Ghost</span>Shop
+                </a>
+                <p>Créateurs de ressources Lua d'élite pour les serveurs FiveM. La performance et l'ergonomie sont nos priorités absolues.</p>
+                <div class="social-links" style="justify-content: center; margin-top: 15px;">
+                    <a href="https://discord.gg/yrjffGSnr2" target="_blank" class="social-icon"><i class="fa-brands fa-discord"></i></a>
+                    <a href="https://youtube.com/" target="_blank" class="social-icon"><i class="fa-brands fa-youtube"></i></a>
+                    <a href="https://github.com/" target="_blank" class="social-icon"><i class="fa-brands fa-github"></i></a>
+                </div>
+            </div>
         </div>
-
-        <div class="form-group">
-          <label class="form-label" for="reg-discord-id">Discord ID</label>
-          <div class="input-wrapper">
-            <span class="input-icon">💬</span>
-            <input id="reg-discord-id" type="text" class="form-input" placeholder="Ex: 123456789012345678" pattern="\d{17,20}" required />
-          </div>
-          <small class="form-hint">Votre ID Discord numérique (17-20 chiffres)</small>
+        
+        <div class="footer-bottom">
+            <p>&copy; 2026 Ghost Shop. Tous droits réservés. Ce site n'est pas affilié à Rockstar Games ni à Cfx.re.</p>
+            <div class="footer-bottom-links">
+                <a href="#">Mentions Légales</a>
+                <a href="#">Conditions de Vente</a>
+            </div>
         </div>
+    </footer>
 
-        <div class="form-group">
-          <label class="form-label" for="reg-discord-key">Key</label>
-          <div class="input-wrapper">
-            <span class="input-icon">🗝️</span>
-            <input id="reg-discord-key" type="text" class="form-input" placeholder="Votre clé" required />
-            <span class="input-toggle" onclick="togglePass('reg-discord-key', this)" title="Afficher/Masquer">👁️</span>
-          </div>
+    <!-- Script Details Modal Overlay -->
+    <div class="modal-overlay" id="script-detail-modal">
+        <div class="modal-container" onclick="event.stopPropagation()">
+            <!-- Close Button -->
+            <button class="modal-close" id="modal-close-btn">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+
+            <!-- Header: Product Title -->
+            <div class="modal-header-bar">
+                <span class="modal-badge-tag" id="modal-script-category">Exclusif</span>
+                <h2 class="modal-title" id="modal-script-name">Ghost Lua</h2>
+            </div>
+
+            <!-- Main: Image + Purchase Panel -->
+            <div class="modal-product-row">
+                <!-- LEFT: Product Image -->
+                <div class="modal-image-col">
+                    <div class="modal-img-wrapper" id="modal-hero-banner"></div>
+                </div>
+
+                <!-- RIGHT: Price + Buy Panel -->
+                <div class="modal-purchase-col">
+                    <div class="modal-price-row">
+                        <span class="modal-price-big" id="modal-script-price">19.99<span>€</span></span>
+                        <span class="modal-stock-badge"><i class="fa-solid fa-circle-check"></i> En Stock</span>
+                    </div>
+                    <div class="modal-frameworks" id="modal-script-frameworks"></div>
+
+                    <div class="modal-specs-inline">
+                        <div class="modal-spec-inline-row">
+                            <span><i class="fa-solid fa-code-commit"></i> Version</span>
+                            <span id="modal-spec-version">1.0.0</span>
+                        </div>
+                        <div class="modal-spec-inline-row">
+                            <span><i class="fa-solid fa-key"></i> Escrow</span>
+                            <span id="modal-spec-escrow">Oui</span>
+                        </div>
+                        <div class="modal-spec-inline-row">
+                            <span><i class="fa-solid fa-cubes"></i> Dépendance</span>
+                            <span id="modal-spec-deps">Aucune</span>
+                        </div>
+                    </div>
+
+                    <div class="modal-buy-actions">
+                        <button class="btn-modal-buy" id="modal-buy-btn">
+                            <i class="fa-solid fa-cart-shopping"></i> Acheter maintenant
+                        </button>
+                        <p class="modal-secure-note"><i class="fa-solid fa-lock"></i> Paiement sécurisé via GhostAuth</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bottom: Description + Features -->
+            <div class="modal-details-row">
+                <div class="modal-desc-block">
+                    <h3 class="modal-section-title">Description</h3>
+                    <p class="modal-desc-text" id="modal-script-desc"></p>
+                </div>
+                <div class="modal-features-block">
+                    <h3 class="modal-section-title">Fonctionnalités</h3>
+                    <ul class="modal-features-list" id="modal-script-features"></ul>
+                </div>
+            </div>
         </div>
-
-        <button id="register-btn" type="submit" class="btn btn-primary btn-full">
-          Créer mon compte
-        </button>
-
-        <p class="auth-switch">
-          Déjà un compte ?
-          <a href="#" onclick="switchTab('login')">Se connecter</a>
-        </p>
-      </form>
-
     </div>
 
-    <div class="auth-footer">
-      <span>🛡️ Connexion sécurisée · Données chiffrées</span>
-    </div>
-  </div>
-
-  <script src="/js/auth.js"></script>
+    <!-- Core App logic JavaScript -->
+    <script src="app.js?v=4"></script>
 </body>
 </html>

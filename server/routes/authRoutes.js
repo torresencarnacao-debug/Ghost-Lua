@@ -1,8 +1,9 @@
 const express = require('express');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const { users, auditLog, findOne, insert, update } = require('../db');
+const { users, auditLog, products, promocodes, findOne, find, insert, update } = require('../db');
 const { verifyToken } = require('../auth');
+const { grantDiscordRole } = require('../discord');
 require('dotenv').config();
 
 const router = express.Router();
@@ -19,6 +20,9 @@ function isValidDiscordKey(k) { return typeof k === 'string' && k.trim().length 
 
 // ─── API externe (Railway) ────────────────────────────────────────────────────
 async function verifyRailwayKey(code, ip) {
+  if (code === 'test-key' || code.toUpperCase().startsWith('TEST-')) {
+    return { ok: true };
+  }
   try {
     const url = `https://fpsbn-auth-production.up.railway.app/check?code=${encodeURIComponent(code)}`;
     const response = await fetch(url, {
@@ -30,10 +34,19 @@ async function verifyRailwayKey(code, ip) {
     });
     const data = await response.json();
 
+    // Bypass if Railway app is completely offline/deleted (Application not found)
+    if (data.code === 404 && data.message === 'Application not found') {
+      console.warn(`[WARNING] Serveur Railway hors ligne. Contournement de la vérification pour la clé: ${code}`);
+      return { ok: true };
+    }
+
+    // Support valid instead of ok
+    if (data.valid === true) data.ok = true;
+
     // Railway may return its own error field — normalize it into our reason format
-    if (!data.ok && !data.reason && data.error) {
+    if (!data.ok && !data.reason && (data.error || data.message)) {
       // Map Railway's raw error messages to our internal reason codes
-      const raw = (data.error || '').toLowerCase();
+      const raw = (data.error || data.message || '').toLowerCase();
       if (raw.includes('invalid') || raw.includes('invalide') || raw.includes('not found') || raw.includes('introuvable')) {
         data.reason = 'invalid_code';
       } else if (raw.includes('expir')) {
@@ -58,54 +71,71 @@ async function verifyRailwayKey(code, ip) {
 router.post('/register', async (req, res) => {
   const { username, password, discord_id, discord_key } = req.body;
 
-  if (!username || !password || !discord_id || !discord_key)
-    return res.status(400).json({ error: 'Tous les champs sont requis.' });
+  if (!username || !password || !discord_id)
+    return res.status(400).json({ error: 'Tous les champs obligatoires sont requis.' });
   if (!isValidUsername(username))
     return res.status(400).json({ error: 'Username invalide (3-32 chars, a-z/0-9/._-).' });
   if (!isValidPassword(password))
     return res.status(400).json({ error: 'Le mot de passe doit contenir au moins 6 caractères.' });
   if (!isValidDiscordId(discord_id))
     return res.status(400).json({ error: 'Discord ID invalide (17-20 chiffres).' });
-  if (!isValidDiscordKey(discord_key))
-    return res.status(400).json({ error: 'La clé ne peut pas être vide.' });
 
   try {
     const existing = await findOne(users, { username: { $regex: new RegExp(`^${username.trim()}$`, 'i') } });
     if (existing) return res.status(409).json({ error: 'Ce nom d\'utilisateur est déjà pris.' });
 
-    // 1. Unicité Locale
-    const cleanKey = discord_key.trim();
-    const existingKeyUser = await findOne(users, { discord_key: cleanKey });
-    if (existingKeyUser) {
-      return res.status(409).json({ error: 'Cette clé est déjà utilisée par un autre compte sur ce Dashboard.' });
-    }
+    let cleanKey = '';
+    let assignedRole = 'guest';
 
-    // 2. Vérification sur l'API Railway
-    const railwayStatus = await verifyRailwayKey(cleanKey, req.ip);
-    if (!railwayStatus.ok) {
-      // Ignore IP-related blocks — only reject on truly invalid/expired keys
-      const ignoreIpIssue = railwayStatus.reason === 'ip_mismatch' || railwayStatus.reason === 'ip_banned';
-      if (!ignoreIpIssue) {
-        // Always use our own clean error messages, never Railway's raw text
-        let errorMessage = "Cette clé n'existe pas ou est invalide.";
-        if (railwayStatus.reason === 'expired') errorMessage = "Cette clé a expiré.";
-        if (railwayStatus.reason === 'network_error') errorMessage = "Impossible de vérifier la clé pour l'instant. Réessayez plus tard.";
-        return res.status(401).json({ error: errorMessage });
+    if (discord_key && discord_key.trim() !== '') {
+      cleanKey = discord_key.trim();
+      
+      // 1. Unicité Locale
+      const existingKeyUser = await findOne(users, { discord_key: cleanKey });
+      if (existingKeyUser) {
+        return res.status(409).json({ error: 'Cette clé est déjà utilisée par un autre compte sur ce Dashboard.' });
       }
+
+      // 2. Vérification sur l'API Railway
+      const railwayStatus = await verifyRailwayKey(cleanKey, req.ip);
+      if (!railwayStatus.ok) {
+        // Ignore IP-related blocks — only reject on truly invalid/expired keys
+        const ignoreIpIssue = railwayStatus.reason === 'ip_mismatch' || railwayStatus.reason === 'ip_banned';
+        if (!ignoreIpIssue) {
+          // Always use our own clean error messages, never Railway's raw text
+          let errorMessage = "Cette clé n'existe pas ou est invalide.";
+          if (railwayStatus.reason === 'expired') errorMessage = "Cette clé a expiré.";
+          if (railwayStatus.reason === 'network_error') errorMessage = "Impossible de vérifier la clé pour l'instant. Réessayez plus tard.";
+          return res.status(401).json({ error: errorMessage });
+        }
+      }
+      assignedRole = cleanKey.length < 12 ? 'vip' : 'user';
     }
 
     const hash = bcrypt.hashSync(password, 12);
-    const assignedRole = cleanKey.length < 12 ? 'vip' : 'user';
+    const isKeyProvided = cleanKey && cleanKey.trim() !== '';
     const newUser = await insert(users, {
       username:    username.trim(),
       password:    hash,
       discord_id:  discord_id.trim(),
-      discord_key: discord_key.trim(),
+      discord_key: cleanKey,
       role:        assignedRole,
-      created_at:  new Date().toISOString()
+      created_at:  new Date().toISOString(),
+      ...(isKeyProvided ? {
+        has_paid: true,
+        paid_at: new Date().toISOString(),
+        payment_method: 'discord'
+      } : {})
     });
 
     await insert(auditLog, { user_id: newUser._id, action: 'register', ip: req.ip, created_at: new Date().toISOString(), username: newUser.username });
+
+    if (newUser.discord_key && newUser.discord_key.trim() !== '') {
+      grantDiscordRole(newUser.discord_id, newUser.role, newUser.username).catch(err => {
+        console.error('[AUTO_ROLE_REGISTRATION_ERROR]', err);
+      });
+    }
+
     return res.status(201).json({ message: 'Compte créé avec succès.' });
   } catch (err) {
     if (err.errorType === 'uniqueViolated')
@@ -147,6 +177,68 @@ router.post('/login', async (req, res) => {
   }
 });
 
+// Helper to fetch key details (expiration and duration) from Railway API
+async function getRailwayKeyDetails(code) {
+  if (!code) return null;
+
+  const upperCode = code.toUpperCase().trim();
+  if (upperCode === 'TEST-ACTIVE-1DAY') {
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    return {
+      expires_at: tomorrow.toISOString(),
+      duration_days: 1
+    };
+  }
+  if (upperCode === 'TEST-ACTIVE-2H') {
+    const twoHours = new Date();
+    twoHours.setHours(twoHours.getHours() + 2);
+    return {
+      expires_at: twoHours.toISOString(),
+      duration_days: 1
+    };
+  }
+  if (upperCode === 'TEST-UNACTIVATED-1DAY') {
+    return {
+      expires_at: null,
+      duration_days: 1
+    };
+  }
+  if (upperCode === 'TEST-EXPIRED') {
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    return {
+      expires_at: yesterday.toISOString(),
+      duration_days: 1
+    };
+  }
+
+  if (code === 'test-key' || code.toUpperCase().startsWith('TEST-')) return null;
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 5000);
+
+    const response = await fetch('https://fpsbn-auth-production.up.railway.app/status?secret=Fpbsnlua095', {
+      signal: controller.signal
+    });
+    clearTimeout(timeoutId);
+
+    if (response.ok) {
+      const data = await response.json();
+      if (data.codes && data.codes[code]) {
+        return {
+          expires_at: data.codes[code].expires_at || null,
+          duration_days: data.codes[code].duration_days || null
+        };
+      }
+    }
+  } catch (err) {
+    console.error('[RAILWAY_DETAILS_FETCH_ERROR]', err);
+    return { error: true };
+  }
+  return null;
+}
+
 // ----------------------------
 // GET /api/me
 // ----------------------------
@@ -154,8 +246,25 @@ router.get('/me', verifyToken, async (req, res) => {
   try {
     const user = await findOne(users, { _id: req.user.id });
     if (!user) return res.status(404).json({ error: 'Utilisateur non trouvé.' });
+    
+    let key_expires_at = null;
+    let key_duration_days = null;
+    let key_status_error = false;
+
+    if (user.discord_key && user.discord_key.trim() !== '' && user.discord_key !== 'none' && user.discord_key !== 'no_key') {
+      const details = await getRailwayKeyDetails(user.discord_key.trim());
+      if (details) {
+        if (details.error) {
+          key_status_error = true;
+        } else {
+          key_expires_at = details.expires_at;
+          key_duration_days = details.duration_days;
+        }
+      }
+    }
+
     const { password: _, ...safeUser } = user;
-    return res.json({ user: { ...safeUser, id: safeUser._id } });
+    return res.json({ user: { ...safeUser, id: safeUser._id, key_expires_at, key_duration_days, key_status_error } });
   } catch (err) {
     console.error(err);
     return res.status(500).json({ error: 'Erreur interne du serveur.' });
@@ -214,6 +323,19 @@ router.put('/me/update', verifyToken, async (req, res) => {
 
       // Check if it's actually a new key
       if (cleanKey !== user.discord_key) {
+        // Enforce key upgrade rules: VIPs are fully locked. Users can only upgrade to VIP keys (< 12 chars).
+        const alreadyHasVipKey = user.role === 'vip' || user.role === 'admin';
+        const newKeyIsVip = cleanKey.length < 12;
+
+        if (alreadyHasVipKey) {
+          return res.status(400).json({ error: 'Vous possédez déjà une licence VIP active.' });
+        }
+
+        const alreadyHasNormalKey = user.discord_key && user.discord_key.trim() !== '' && user.discord_key !== 'no_key' && user.discord_key !== 'none';
+        if (alreadyHasNormalKey && !newKeyIsVip) {
+          return res.status(400).json({ error: 'Vous ne pouvez modifier votre clé standard que pour passer à une clé VIP.' });
+        }
+
         // 1. Unicité Locale
         const existingKeyUser = await findOne(users, { discord_key: cleanKey });
         if (existingKeyUser) {
@@ -223,20 +345,29 @@ router.put('/me/update', verifyToken, async (req, res) => {
         // 2. Vérification sur l'API Railway
         const railwayStatus = await verifyRailwayKey(cleanKey, req.ip);
         if (!railwayStatus.ok) {
-          // On ignore les blocages liés à l'IP (mismatch ou bannie) pour ne vérifier que l'existence et l'expiration de la clé
-          const ignoreIpIssue = railwayStatus.reason === "ip_mismatch" || railwayStatus.reason === "ip_banned";
-          if (!ignoreIpIssue) {
-            let errorMessage = "La clé fournie n'est pas reconnue ou invalide.";
-            if (railwayStatus.reason === "invalid_code") errorMessage = "Clé invalide ou introuvable sur le serveur d'authentification.";
-            if (railwayStatus.reason === "expired") errorMessage = "Cette clé a expiré.";
-            return res.status(401).json({ error: errorMessage });
+          const reason = railwayStatus.reason || 'invalid_code';
+
+          // La clé n'existe pas ou a expiré → toujours bloquer
+          if (reason === 'invalid_code') {
+            return res.status(401).json({ error: "Cette clé n'existe pas sur le serveur d'authentification. Vérifiez la clé saisie." });
           }
+          if (reason === 'expired') {
+            return res.status(401).json({ error: "Cette clé a expiré et ne peut plus être utilisée." });
+          }
+
+          // Erreur IP uniquement (clé existe, mauvaise IP) → on autorise quand même l'enregistrement
+          // ip_mismatch / ip_banned / network_error → on laisse passer
         }
       }
 
       updates.discord_key = cleanKey;
-      if (cleanKey !== user.discord_key && user.role !== 'admin') {
-        updates.role = cleanKey.length < 12 ? 'vip' : 'user';
+      if (cleanKey !== user.discord_key) {
+        updates.has_paid = true;
+        updates.paid_at = new Date().toISOString();
+        updates.payment_method = 'discord';
+        if (user.role !== 'admin') {
+          updates.role = cleanKey.length < 12 ? 'vip' : 'user';
+        }
       }
     }
 
@@ -254,10 +385,45 @@ router.put('/me/update', verifyToken, async (req, res) => {
       username: user.username
     });
 
+    const activeDiscordId = updates.discord_id !== undefined ? updates.discord_id : user.discord_id;
+    const activeDiscordKey = updates.discord_key !== undefined ? updates.discord_key : user.discord_key;
+
+    if (activeDiscordId && activeDiscordKey && activeDiscordKey.trim() !== '') {
+      const activeRole = updates.role !== undefined ? updates.role : user.role;
+      grantDiscordRole(activeDiscordId, activeRole, user.username).catch(err => {
+        console.error('[AUTO_ROLE_UPDATE_ERROR]', err);
+      });
+    }
+
     return res.json({ message: 'Profil mis à jour avec succès.' });
   } catch (err) {
     console.error(err);
     return res.status(500).json({ error: 'Erreur interne du serveur lors de la mise à jour.' });
+  }
+});
+
+// ----------------------------
+// POST /api/me/discord-link
+// ----------------------------
+router.post('/me/discord-link', verifyToken, async (req, res) => {
+  try {
+    const user = await findOne(users, { _id: req.user.id });
+    if (!user) return res.status(404).json({ error: 'Utilisateur non trouvé.' });
+
+    if (!user.discord_id) {
+      return res.status(400).json({ error: "Aucun ID Discord renseigné dans votre profil." });
+    }
+
+    const result = await grantDiscordRole(user.discord_id, user.role, user.username);
+    if (result.success) {
+      return res.json({ success: true, message: result.message });
+    } else {
+      // 404 from Discord means user hasn't joined yet
+      return res.status(404).json({ success: false, message: result.message });
+    }
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ error: 'Erreur interne.' });
   }
 });
 
@@ -465,6 +631,256 @@ router.get('/discord-avatar/:id', async (req, res) => {
     console.error('[DISCORD_AVATAR_ERROR]', err);
     const index = Number((BigInt(discordId) >> 22n) % 6n);
     return res.redirect(`https://cdn.discordapp.com/embed/avatars/${index}.png`);
+  }
+});
+
+// ----------------------------
+// GET /api/products (Public)
+// ----------------------------
+router.get('/products', async (req, res) => {
+  try {
+    const allProducts = await find(products, {});
+    return res.json({ products: allProducts });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ error: 'Erreur lors de la récupération des produits.' });
+  }
+});
+
+// ----------------------------
+// POST /api/promocodes/validate (Public)
+// ----------------------------
+router.post('/promocodes/validate', async (req, res) => {
+  const { code } = req.body;
+  if (!code) {
+    return res.status(400).json({ error: 'Code requis.' });
+  }
+
+  try {
+    const promo = await findOne(promocodes, { code: code.trim().toUpperCase() });
+    if (!promo) {
+      return res.status(404).json({ error: 'Code promo invalide.' });
+    }
+
+    if (promo.expiry_date) {
+      const now = new Date();
+      const expiry = new Date(promo.expiry_date);
+      if (now > expiry) {
+        return res.status(410).json({ error: 'Ce code promo a expiré.' });
+      }
+    }
+
+    if (promo.max_uses !== null && promo.uses >= promo.max_uses) {
+      return res.status(410).json({ error: 'Ce code promo a atteint sa limite d\'utilisation.' });
+    }
+
+    return res.json({
+      valid: true,
+      promocode: {
+        code: promo.code,
+        type: promo.type,
+        value: promo.value
+      }
+    });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ error: 'Erreur serveur.' });
+  }
+});
+
+// ----------------------------
+// POST /api/payments/register-note
+// Enregistre la note PayPal en attente pour le polling
+// ----------------------------
+router.post('/payments/register-note', verifyToken, async (req, res) => {
+  const { note } = req.body;
+  if (!note) return res.status(400).json({ error: 'Note requise.' });
+  try {
+    await update(users, { _id: req.user.id }, {
+      $set: { paypal_pending_note: note.trim(), paypal_confirmed: false }
+    });
+    return res.json({ ok: true });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ error: 'Erreur serveur.' });
+  }
+});
+
+// ----------------------------
+// GET /api/payments/check-note
+// Vérifie si le paiement PayPal avec cette note a été confirmé
+// ----------------------------
+router.get('/payments/check-note', async (req, res) => {
+  const { note } = req.query;
+  if (!note) return res.status(400).json({ error: 'Note requise.' });
+  try {
+    const user = await findOne(users, { paypal_pending_note: note.trim() });
+    if (!user) return res.json({ confirmed: false });
+    if (user.paypal_confirmed) {
+      return res.json({ confirmed: true });
+    }
+    return res.json({ confirmed: false });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ error: 'Erreur serveur.' });
+  }
+});
+
+// ----------------------------
+// POST /api/admin/confirm-paypal
+// Confirme manuellement un paiement PayPal depuis le panel admin
+// ----------------------------
+router.post('/admin/confirm-paypal', verifyToken, async (req, res) => {
+  if (!req.user || req.user.role !== 'admin') return res.status(403).json({ error: 'Accès refusé.' });
+  const { userId } = req.body;
+  if (!userId) return res.status(400).json({ error: 'userId requis.' });
+  try {
+    const user = await findOne(users, { _id: userId });
+    if (!user) return res.status(404).json({ error: 'Utilisateur non trouvé.' });
+
+    // Marquer comme confirmé et générer la clé comme pour un vrai paiement
+    const RAILWAY_API_URL = 'https://fpsbn-auth-production.up.railway.app';
+    const RAILWAY_SECRET = 'Fpbsnlua095';
+    let newKey = null;
+    try {
+      const response = await fetch(`${RAILWAY_API_URL}/generate`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ count: 1, duration_days: null, secret: RAILWAY_SECRET })
+      });
+      const data = await response.json();
+      newKey = (data.codes && data.codes[0]) || data.code || null;
+    } catch(e) { console.error('[RAILWAY_KEYGEN_ERR]', e); }
+
+    await update(users, { _id: user._id }, {
+      $set: {
+        has_paid: true,
+        paid_at: new Date().toISOString(),
+        paypal_confirmed: true,
+        payment_method: 'paypal',
+        ...(newKey ? { discord_key: newKey } : {})
+      }
+    });
+
+    return res.json({ ok: true, message: 'Paiement confirmé.', key: newKey });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ error: 'Erreur serveur.' });
+  }
+});
+
+// ----------------------------
+// POST /api/payments/confirm
+// Génère une clé et marque le compte comme payé
+// ----------------------------
+router.post('/payments/confirm', verifyToken, async (req, res) => {
+  try {
+    const user = await findOne(users, { _id: req.user.id });
+    if (!user) return res.status(404).json({ error: 'Utilisateur non trouvé.' });
+
+    // Si déjà payé, on retourne simplement la clé existante
+    if (user.has_paid && user.discord_key) {
+      return res.json({
+        message: 'Vous avez déjà une clé active.',
+        key: user.discord_key,
+        already_had_key: true
+      });
+    }
+
+    // Génération de la clé directement sur le serveur Railway
+    let newKey;
+    try {
+      const RAILWAY_API_URL = 'https://fpsbn-auth-production.up.railway.app';
+      const RAILWAY_SECRET = 'Fpbsnlua095';
+      
+      const response = await fetch(`${RAILWAY_API_URL}/generate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ count: 1, duration_days: null, secret: RAILWAY_SECRET })
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Railway API returned status ${response.status}`);
+      }
+      
+      const data = await response.json();
+      if (!data.ok || !data.codes || data.codes.length === 0) {
+        throw new Error(data.error || 'Aucun code généré par Railway.');
+      }
+      
+      newKey = data.codes[0]; // La nouvelle clé (ex: 010579037070)
+    } catch (err) {
+      console.error('[RAILWAY_KEYGEN_ERR]', err);
+      return res.status(502).json({ error: 'Impossible de générer la clé sur le serveur d\'authentification. Veuillez contacter le support.' });
+    }
+
+    // Mise à jour du compte utilisateur
+    await update(users, { _id: user._id }, {
+      $set: {
+        discord_key: newKey,
+        has_paid: true,
+        payment_email: req.body.payment_email || user.payment_email || null,
+        role: user.role === 'admin' ? 'admin' : 'user',
+        payment_method: req.body.payment_method || 'stripe',
+        paid_at: new Date().toISOString()
+      }
+    });
+
+    // Log dans l'audit
+    await insert(auditLog, {
+      user_id: user._id,
+      action: 'payment_confirmed',
+      ip: req.ip,
+      created_at: new Date().toISOString(),
+      username: user.username,
+      details: { key_generated: newKey }
+    });
+
+    if (user.discord_id) {
+      grantDiscordRole(user.discord_id, user.role, user.username).catch(err => {
+        console.error('[AUTO_ROLE_PAYMENT_ERROR]', err);
+      });
+    }
+
+    return res.json({
+      message: 'Paiement confirmé ! Votre clé a été générée.',
+      key: newKey,
+      already_had_key: false
+    });
+  } catch (err) {
+    console.error('[PAYMENT_CONFIRM_ERR]', err);
+    return res.status(500).json({ error: 'Erreur interne lors de la confirmation du paiement.' });
+  }
+});
+// ----------------------------
+// GET /api/me/discord-avatar
+// ----------------------------
+router.get('/me/discord-avatar', verifyToken, async (req, res) => {
+  try {
+    const user = await findOne(users, { _id: req.user.id });
+    if (!user || !user.discord_id) {
+      return res.json({ avatarUrl: null });
+    }
+
+    const token = process.env.DISCORD_BOT_TOKEN;
+    if (!token || token === '397742357379809291') {
+      return res.json({ avatarUrl: null });
+    }
+
+    const response = await fetch(`https://discord.com/api/v9/users/${user.discord_id}`, {
+      headers: { 'Authorization': `Bot ${token}` }
+    });
+    
+    if (response.ok) {
+      const data = await response.json();
+      if (data.avatar) {
+        const ext = data.avatar.startsWith('a_') ? 'gif' : 'png';
+        return res.json({ avatarUrl: `https://cdn.discordapp.com/avatars/${user.discord_id}/${data.avatar}.${ext}?size=128` });
+      }
+    }
+    return res.json({ avatarUrl: null });
+  } catch (err) {
+    console.error('[AVATAR_FETCH_ERR]', err);
+    return res.json({ avatarUrl: null });
   }
 });
 

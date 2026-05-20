@@ -14,9 +14,19 @@ const auditLog = new Datastore({
   filename: path.join(DB_DIR, 'audit.db'),
   autoload: true
 });
+const products = new Datastore({
+  filename: path.join(DB_DIR, 'products.db'),
+  autoload: true
+});
+const promocodes = new Datastore({
+  filename: path.join(DB_DIR, 'promocodes.db'),
+  autoload: true
+});
 
 // ─── Indexes ─────────────────────────────────────────────────────────────────
 users.ensureIndex({ fieldName: 'username', unique: true });
+products.ensureIndex({ fieldName: 'id', unique: true });
+promocodes.ensureIndex({ fieldName: 'code', unique: true });
 
 // ─── Promisified helpers ──────────────────────────────────────────────────────
 function findOne(db, query) {
@@ -72,6 +82,38 @@ async function seedAdmin() {
   }
 }
 
-seedAdmin().catch(console.error);
+// ─── Seed Products ─────────────────────────────────────────────────────────────
+async function seedProducts() {
+  const prodCount = await count(products, {});
+  if (prodCount === 0) {
+    await insert(products, {
+        id: 'ghost_lua',
+        name: 'Ghost Lua',
+        icon: 'fa-solid fa-ghost',
+        image: 'ghost_lua.jpg',
+        badge: 'Exclusif',
+        category: 'utilities',
+        frameworks: ['qb', 'esx', 'qbox'],
+        shortDesc: 'L\'outil ultime de Ghost Shop. Fluide et 100% indétectable.',
+        longDesc: 'Ghost Lua est la ressource phare de Ghost Shop. Conçu pour offrir un contrôle total sur votre serveur FiveM, ce script dispose d\'un menu intuitif et d\'options avancées de gestion des entités. Entièrement sécurisé.',
+        version: '1.0.0',
+        escrow: 'Oui',
+        dependencies: 'Aucune',
+        price: '19.99',
+        stripeLink: 'https://buy.stripe.com/bJe6oJ50EceP1Vqbmz9Ve00',
+        features: [
+            'Gestion avancée du serveur en temps réel',
+            'Menu d\'administration Ghost intuitif et sécurisé',
+            'Indétectable et compatible QB-Core, ESX et Qbox',
+            'Zéro fuite mémoire garantie',
+            'Support technique premium inclus'
+        ]
+    });
+    console.log(`[DB] Default product (Ghost Lua) seeded.`);
+  }
+}
 
-module.exports = { users, auditLog, findOne, find, insert, update, remove, count };
+seedAdmin().catch(console.error);
+seedProducts().catch(console.error);
+
+module.exports = { users, auditLog, products, promocodes, findOne, find, insert, update, remove, count };

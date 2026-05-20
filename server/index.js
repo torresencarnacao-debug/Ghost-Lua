@@ -4,10 +4,12 @@ const path = require('path');
 require('dotenv').config();
 
 // Init DB (runs schema + seed)
-require('./db');
+const db = require('./db');
+const { findOne, update, users } = db;
 
 const authRoutes  = require('./routes/authRoutes');
 const adminRoutes = require('./routes/adminRoutes');
+const paypalWatcher = require('./paypalMailWatcher');
 
 const app  = express();
 const PORT = process.env.PORT || 3000;
@@ -41,4 +43,11 @@ app.listen(PORT, () => {
   console.log(`📊 Dashboard  → http://localhost:${PORT}/dashboard`);
   console.log(`👑 Admin Panel → http://localhost:${PORT}/admin`);
   console.log(`🔑 Default Admin: admin / Admin@1234\n`);
+
+  // ─── Surveillance PayPal Gmail ───────────────────────────────────────────────
+  paypalWatcher.init({ findOne, update, users });
+  paypalWatcher.startWatcher(
+    process.env.GMAIL_USER,
+    process.env.GMAIL_APP_PASSWORD
+  );
 });

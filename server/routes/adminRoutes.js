@@ -1,6 +1,7 @@
 const express = require('express');
-const { users, auditLog, find, findOne, update, remove, insert, count } = require('../db');
+const { users, auditLog, products, promocodes, find, findOne, update, remove, insert, count } = require('../db');
 const { verifyToken, requireAdmin } = require('../auth');
+const { grantDiscordRole } = require('../discord');
 
 const router = express.Router();
 router.use(verifyToken, requireAdmin);
@@ -134,6 +135,12 @@ router.put('/users/:id', async (req, res) => {
       const existingKey = await findOne(users, { discord_key: dk, _id: { $ne: id } });
       if (existingKey) return res.status(409).json({ error: 'Cette clé est déjà utilisée par un autre compte.' });
       updates.discord_key = dk;
+
+      if (dk !== user.discord_key) {
+        updates.has_paid = true;
+        updates.paid_at = new Date().toISOString();
+        updates.payment_method = 'discord';
+      }
     }
 
     if (role !== undefined) {
@@ -141,6 +148,19 @@ router.put('/users/:id', async (req, res) => {
         return res.status(400).json({ error: 'Rôle invalide (user, vip ou admin).' });
       }
       updates.role = role;
+    }
+
+    // Force matching role based on key type for non-admin accounts
+    const targetRole = updates.role !== undefined ? updates.role : user.role;
+    const targetKey = updates.discord_key !== undefined ? updates.discord_key : user.discord_key;
+    if (targetRole !== 'admin') {
+      const cleanKey = targetKey ? targetKey.trim() : '';
+      if (cleanKey !== '' && cleanKey !== 'none' && cleanKey !== 'no_key') {
+        const isVip = cleanKey.length < 12;
+        updates.role = isVip ? 'vip' : 'user';
+      } else {
+        updates.role = 'guest';
+      }
     }
 
     if (Object.keys(updates).length === 0) {
@@ -156,6 +176,16 @@ router.put('/users/:id', async (req, res) => {
       username: req.user.username
     });
 
+    const activeDiscordId = updates.discord_id !== undefined ? updates.discord_id : user.discord_id;
+    const activeDiscordKey = updates.discord_key !== undefined ? updates.discord_key : user.discord_key;
+
+    if (activeDiscordId && activeDiscordKey && activeDiscordKey.trim() !== '') {
+      const activeRole = updates.role !== undefined ? updates.role : user.role;
+      grantDiscordRole(activeDiscordId, activeRole, user.username).catch(err => {
+        console.error('[AUTO_ROLE_ADMIN_EDIT_ERROR]', err);
+      });
+    }
+
     return res.json({ message: 'Utilisateur mis à jour avec succès.' });
   } catch (err) {
     console.error(err);
@@ -170,6 +200,70 @@ router.get('/logs', async (req, res) => {
   try {
     const logs = await find(auditLog, {}, { created_at: -1 });
     return res.json({ logs: logs.slice(0, 100) });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ error: 'Erreur interne.' });
+  }
+});
+
+// ----------------------------
+// GET /api/admin/products
+// ----------------------------
+router.get('/products', async (req, res) => {
+  try {
+    const allProducts = await find(products, {});
+    return res.json({ products: allProducts });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ error: 'Erreur interne.' });
+  }
+});
+
+// ----------------------------
+// POST /api/admin/products
+// ----------------------------
+router.post('/products', async (req, res) => {
+  try {
+    const newProduct = req.body;
+    if (!newProduct.id) {
+      newProduct.id = 'prod_' + Math.random().toString(36).substring(2, 9);
+    }
+    await insert(products, newProduct);
+    await insert(auditLog, { user_id: req.user.id, action: 'admin_add_product', ip: req.ip, created_at: new Date().toISOString(), username: req.user.username });
+    return res.json({ message: 'Produit ajouté.', product: newProduct });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ error: 'Erreur interne.' });
+  }
+});
+
+// ----------------------------
+// PUT /api/admin/products/:id
+// ----------------------------
+router.put('/products/:id', async (req, res) => {
+  const { id } = req.params;
+  try {
+    const updates = req.body;
+    delete updates._id; // avoid updating nedb internal id
+    
+    await update(products, { id }, { $set: updates });
+    await insert(auditLog, { user_id: req.user.id, action: 'admin_edit_product', ip: req.ip, created_at: new Date().toISOString(), username: req.user.username });
+    return res.json({ message: 'Produit mis à jour.' });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ error: 'Erreur interne.' });
+  }
+});
+
+// ----------------------------
+// DELETE /api/admin/products/:id
+// ----------------------------
+router.delete('/products/:id', async (req, res) => {
+  const { id } = req.params;
+  try {
+    await remove(products, { id });
+    await insert(auditLog, { user_id: req.user.id, action: 'admin_delete_product', ip: req.ip, created_at: new Date().toISOString(), username: req.user.username });
+    return res.json({ message: 'Produit supprimé.' });
   } catch (err) {
     console.error(err);
     return res.status(500).json({ error: 'Erreur interne.' });
@@ -242,10 +336,88 @@ router.post('/railway/delete', async (req, res) => {
   const { code } = req.body;
   try {
     const data = await railwayRequest('/delete', 'POST', { code });
+    
+    // Dissocier automatiquement l'utilisateur ayant cette clé localement
+    const userToDissociate = await findOne(users, { discord_key: code });
+    if (userToDissociate) {
+      const updates = {
+        discord_key: '',
+        has_paid: false,
+        payment_method: ''
+      };
+      if (userToDissociate.role !== 'admin') {
+        updates.role = 'guest';
+      }
+      await update(users, { _id: userToDissociate._id }, { $set: updates });
+      await insert(auditLog, {
+        user_id: req.user.id, // L'admin effectuant la suppression
+        action: 'admin_dissociate_key_on_delete',
+        ip: req.ip,
+        created_at: new Date().toISOString(),
+        username: req.user.username,
+        details: { code, target_user: userToDissociate.username }
+      });
+    }
+
     return res.json(data);
   } catch (err) {
     console.error('[RAILWAY_PROXY_ERR]', err);
     return res.status(502).json({ error: 'Erreur de suppression sur Railway.' });
+  }
+});
+
+// POST delete multiple keys
+router.post('/railway/delete-multiple', async (req, res) => {
+  const { codes } = req.body;
+  if (!Array.isArray(codes) || codes.length === 0) {
+    return res.status(400).json({ error: 'Aucune clé fournie.' });
+  }
+
+  try {
+    const results = [];
+    const dissociatedUsers = [];
+
+    for (const code of codes) {
+      try {
+        await railwayRequest('/delete', 'POST', { code });
+        results.push({ code, status: 'deleted' });
+
+        // Dissocier l'utilisateur localement
+        const userToDissociate = await findOne(users, { discord_key: code });
+        if (userToDissociate) {
+          const updates = {
+            discord_key: '',
+            has_paid: false,
+            payment_method: ''
+          };
+          if (userToDissociate.role !== 'admin') {
+            updates.role = 'guest';
+          }
+          await update(users, { _id: userToDissociate._id }, { $set: updates });
+          dissociatedUsers.push(userToDissociate.username);
+        }
+      } catch (err) {
+        console.error(`[RAILWAY_MULTI_DELETE_ERR] Failed to delete ${code}:`, err);
+        results.push({ code, status: 'failed', error: err.message || 'Erreur Railway' });
+      }
+    }
+
+    if (results.some(r => r.status === 'deleted')) {
+      const deletedCodes = results.filter(r => r.status === 'deleted').map(r => r.code);
+      await insert(auditLog, {
+        user_id: req.user.id,
+        action: 'admin_delete_multiple_keys',
+        ip: req.ip,
+        created_at: new Date().toISOString(),
+        username: req.user.username,
+        details: { codes: deletedCodes, target_users: dissociatedUsers }
+      });
+    }
+
+    return res.json({ message: 'Traitement des suppressions terminé.', results });
+  } catch (err) {
+    console.error('[RAILWAY_PROXY_ERR]', err);
+    return res.status(500).json({ error: 'Erreur interne lors de la suppression groupée.' });
   }
 });
 
@@ -293,6 +465,100 @@ router.post('/railway/unban', async (req, res) => {
   } catch (err) {
     console.error('[RAILWAY_PROXY_ERR]', err);
     return res.status(502).json({ error: 'Erreur de débannissement IP sur Railway.' });
+  }
+});
+
+// ----------------------------
+// GET /api/admin/promocodes
+// ----------------------------
+router.get('/promocodes', async (req, res) => {
+  try {
+    const allPromo = await find(promocodes, {}, { created_at: -1 });
+    return res.json({ promocodes: allPromo });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ error: 'Erreur interne.' });
+  }
+});
+
+// ----------------------------
+// POST /api/admin/promocodes
+// ----------------------------
+router.post('/promocodes', async (req, res) => {
+  try {
+    const { code, type, value, max_uses, expiry_date } = req.body;
+    if (!code || !type || value === undefined) {
+      return res.status(400).json({ error: 'Champs obligatoires manquants.' });
+    }
+    const cleanCode = code.trim().toUpperCase();
+    const existing = await findOne(promocodes, { code: cleanCode });
+    if (existing) {
+      return res.status(409).json({ error: 'Ce code promotionnel existe déjà.' });
+    }
+    const newPromo = {
+      code: cleanCode,
+      type,
+      value: Number(value),
+      max_uses: max_uses ? Number(max_uses) : null,
+      uses: 0,
+      expiry_date: expiry_date || null,
+      created_at: new Date().toISOString()
+    };
+    const saved = await insert(promocodes, newPromo);
+    await insert(auditLog, { user_id: req.user.id, action: 'admin_add_promocode', ip: req.ip, created_at: new Date().toISOString(), username: req.user.username, details: { code: cleanCode } });
+    return res.json({ message: 'Code promotionnel créé.', promocode: saved });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ error: 'Erreur interne.' });
+  }
+});
+
+// ----------------------------
+// PUT /api/admin/promocodes/:id
+// ----------------------------
+router.put('/promocodes/:id', async (req, res) => {
+  const { id } = req.params;
+  try {
+    const { code, type, value, max_uses, expiry_date } = req.body;
+    const cleanCode = code.trim().toUpperCase();
+    
+    const existing = await findOne(promocodes, { code: cleanCode, _id: { $ne: id } });
+    if (existing) {
+      return res.status(409).json({ error: 'Ce code promotionnel existe déjà.' });
+    }
+
+    const updates = {
+      code: cleanCode,
+      type,
+      value: Number(value),
+      max_uses: max_uses ? Number(max_uses) : null,
+      expiry_date: expiry_date || null
+    };
+
+    await update(promocodes, { _id: id }, { $set: updates });
+    await insert(auditLog, { user_id: req.user.id, action: 'admin_edit_promocode', ip: req.ip, created_at: new Date().toISOString(), username: req.user.username, details: { code: cleanCode } });
+    return res.json({ message: 'Code promotionnel mis à jour.' });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ error: 'Erreur interne.' });
+  }
+});
+
+// ----------------------------
+// DELETE /api/admin/promocodes/:id
+// ----------------------------
+router.delete('/promocodes/:id', async (req, res) => {
+  const { id } = req.params;
+  try {
+    const promo = await findOne(promocodes, { _id: id });
+    if (!promo) return res.status(404).json({ error: 'Code promo non trouvé.' });
+
+    await remove(promocodes, { _id: id });
+    await insert(auditLog, { user_id: req.user.id, action: 'admin_delete_promocode', ip: req.ip, created_at: new Date().toISOString(), username: req.user.username, details: { code: promo.code } });
+    return res.json({ message: 'Code promotionnel supprimé.' });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ error: 'Erreur interne.' });
   }
 });
 

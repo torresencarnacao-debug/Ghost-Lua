@@ -5,9 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Panel Admin — Ghost Dashboard</title>
   <meta name="description" content="Panel d'administration pour gérer les utilisateurs." />
-  <link rel="stylesheet" href="/css/style.css" />
-  <link rel="stylesheet" href="/css/admin.css" />
-  <script src="/js/particles.js" defer></script>
+  <link rel="stylesheet" href="css/dashboard-style.css" />
+  <link rel="stylesheet" href="css/admin.css" />
+  <script src="js/dashboard-particles.js" defer></script>
 </head>
 <body>
   <div class="bg-orbs">
@@ -19,12 +19,15 @@
   <!-- NAVBAR -->
   <nav class="navbar">
     <div class="navbar-brand">
-      <img src="/img/logo.png" alt="Ghost Logo" class="logo-icon-img" />
+      <img src="img/logo.png" alt="Ghost Logo" class="logo-icon-img" />
       Ghost Dashboard
       <span class="badge badge-admin" style="margin-left: 4px;">ADMIN</span>
     </div>
     <div class="navbar-actions">
-      <a href="/dashboard" class="btn btn-ghost btn-sm">📊 Dashboard</a>
+      <a href="index.html" class="btn btn-ghost btn-sm" style="margin-right: 8px; border-color: rgba(168, 85, 247, 0.3);">
+        🛒 Boutique
+      </a>
+      <a href="dashboard.html" class="btn btn-ghost btn-sm">📊 Dashboard</a>
       <div class="navbar-user">
         <div class="avatar" id="nav-avatar" style="background: var(--gradient-admin);">A</div>
         <span id="nav-username" style="font-weight:600; font-size:0.9rem;">Admin</span>
@@ -34,49 +37,71 @@
   </nav>
 
   <!-- MAIN -->
-  <main class="page-content">
-    <!-- Header -->
-    <div style="margin-bottom: 32px;">
-      <h1 class="page-title">
-        👑 <span class="gradient-text admin-gradient-text">Panel Admin</span>
-      </h1>
-      <p style="color: var(--text-secondary); font-size: 0.9rem;">
-        Gestion complète des utilisateurs et supervision du système.
-      </p>
-    </div>
+  <div class="dashboard-layout">
+    <!-- SIDEBAR -->
+    <aside class="dashboard-sidebar">
+      <div class="sidebar-profile glass" style="border: 1px solid rgba(236, 72, 153, 0.2);">
+        <div style="display: flex; gap: 12px; align-items: center; margin-bottom: 16px;">
+          <div class="avatar" id="sidebar-avatar" style="background: var(--gradient-admin);">A</div>
+          <div>
+            <div class="sidebar-name" id="sidebar-username">Admin</div>
+            <div class="sidebar-since">Depuis <span id="sidebar-since-date">—</span></div>
+          </div>
+        </div>
+        <div class="sidebar-status active" style="border-color: rgba(236,72,153,0.3); background: rgba(236,72,153,0.05);">
+          <div style="display: flex; align-items: center; gap: 6px;">
+            <div class="status-dot" style="background: #f9a8d4; box-shadow: 0 0 8px #f9a8d4; width: 8px; height: 8px; border-radius: 50%;"></div> <span>Administrateur</span>
+          </div>
+        </div>
+      </div>
 
-    <!-- Stats -->
-    <div class="stats-grid" style="margin-bottom: 32px; display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px;">
-      <div class="stat-card">
-        <div class="stat-icon purple">👤</div>
-        <div class="stat-value" id="stat-total">—</div>
-        <div class="stat-label">Membres standard</div>
+      <div class="sidebar-nav">
+        <a href="dashboard.html" class="sidebar-link"><i class="fa-solid fa-arrow-left"></i> Retour Dashboard</a>
+        <a href="javascript:void(0);" onclick="switchAdminTab('users')" class="sidebar-link active" id="tab-btn-users"><i class="fa-solid fa-users"></i> Utilisateurs & Logs</a>
+        <a href="javascript:void(0);" onclick="switchAdminTab('customers')" class="sidebar-link" id="tab-btn-customers"><i class="fa-solid fa-gem"></i> Acheteurs</a>
+        <a href="javascript:void(0);" onclick="switchAdminTab('railway')" class="sidebar-link" id="tab-btn-railway"><i class="fa-solid fa-key"></i> Clés & API Railway</a>
+        <a href="javascript:void(0);" onclick="switchAdminTab('products')" class="sidebar-link" id="tab-btn-products"><i class="fa-solid fa-cart-shopping"></i> Boutique & Promos</a>
       </div>
-      <div class="stat-card">
-        <div class="stat-icon gold">⭐</div>
-        <div class="stat-value" id="stat-vips">—</div>
-        <div class="stat-label">Membres VIP</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-icon pink">👑</div>
-        <div class="stat-value" id="stat-admins">—</div>
-        <div class="stat-label">Administrateurs</div>
-      </div>
-      <div class="stat-card" style="position: relative;">
-        <div class="stat-icon green" id="railway-status-icon">🔌</div>
-        <div class="stat-value" id="stat-railway" style="font-size: 1.2rem; font-weight: 700; color: #10b981;">Vérification...</div>
-        <div class="stat-label">API Railway</div>
-      </div>
-    </div>
+    </aside>
 
-    <!-- Alert -->
-    <div id="admin-alert" style="display:none; margin-bottom: 24px;" class="alert"></div>
+    <!-- MAIN CONTENT -->
+    <main class="dashboard-main">
+      <!-- Header -->
+      <div style="margin-bottom: 32px;">
+        <h1 class="page-title">
+          👑 <span class="gradient-text admin-gradient-text">Panel Admin</span>
+        </h1>
+        <p style="color: var(--text-secondary); font-size: 0.9rem;">
+          Gestion complète des utilisateurs et supervision du système.
+        </p>
+      </div>
 
-    <!-- TABS NAVIGATION -->
-    <div class="auth-tabs" style="margin-bottom: 28px; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 8px; display: flex; gap: 8px;">
-      <button id="tab-btn-users" class="active" onclick="switchAdminTab('users')" style="border-radius: 8px; padding: 10px 18px; font-weight: 600; cursor: pointer;">👥 Utilisateurs & Logs</button>
-      <button id="tab-btn-railway" onclick="switchAdminTab('railway')" style="border-radius: 8px; padding: 10px 18px; font-weight: 600; cursor: pointer;">🔑 API Railway (Flask)</button>
-    </div>
+      <!-- Stats -->
+      <div class="stats-grid" style="margin-bottom: 32px; display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px;">
+        <div class="stat-card">
+          <div class="stat-icon purple">👤</div>
+          <div class="stat-value" id="stat-total">—</div>
+          <div class="stat-label">Membres standard</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon gold">⭐</div>
+          <div class="stat-value" id="stat-vips">—</div>
+          <div class="stat-label">Membres VIP</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon pink">👑</div>
+          <div class="stat-value" id="stat-admins">—</div>
+          <div class="stat-label">Administrateurs</div>
+        </div>
+        <div class="stat-card" style="position: relative;">
+          <div class="stat-icon green" id="railway-status-icon">🔌</div>
+          <div class="stat-value" id="stat-railway" style="font-size: 1.2rem; font-weight: 700; color: #10b981;">Vérification...</div>
+          <div class="stat-label">API Railway</div>
+        </div>
+      </div>
+
+      <!-- Alert -->
+      <div id="admin-alert" style="display:none; margin-bottom: 24px;" class="alert"></div>
 
     <!-- PANE 1: USERS & LOGS -->
     <div id="pane-users" class="tab-pane">
@@ -115,14 +140,20 @@
 
       <!-- Audit Log -->
       <div>
-        <div class="section-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
-          <div>
-            <div class="section-title" style="font-size: 1.25rem; font-weight: 700; color: var(--text-primary);">📋 Journal d'activité</div>
-            <div class="section-sub" style="color: var(--text-muted); font-size: 0.85rem;">100 dernières actions locales</div>
+        <div class="section-header" style="margin-bottom: 16px;">
+          <div onclick="toggleAuditLogs()" style="display: flex; align-items: center; gap: 12px; cursor: pointer; user-select: none;">
+            <i class="fa-solid fa-chevron-right" id="logs-toggle-icon" style="color: var(--accent-1); font-size: 1.1rem; transition: transform 0.3s ease;"></i>
+            <div>
+              <div class="section-title" style="font-size: 1.25rem; font-weight: 700; color: var(--text-primary);">📋 Journal d'activité</div>
+              <div class="section-sub" style="color: var(--text-muted); font-size: 0.85rem;">100 dernières actions locales</div>
+            </div>
           </div>
-          <button class="btn btn-ghost btn-sm" onclick="loadLogs()">🔄 Rafraîchir</button>
+          <div style="display: flex; gap: 8px;">
+            <button class="btn btn-ghost btn-sm" onclick="toggleAuditLogs()" id="logs-toggle-btn">👁️ Déplier</button>
+            <button class="btn btn-ghost btn-sm" onclick="loadLogs()">🔄 Rafraîchir</button>
+          </div>
         </div>
-        <div class="table-wrapper">
+        <div class="table-wrapper" id="logs-table-wrapper" style="display: none;">
           <table id="logs-table">
             <thead>
               <tr>
@@ -140,6 +171,39 @@
       </div>
     </div>
 
+    <!-- PANE: CUSTOMERS -->
+    <div id="pane-customers" class="tab-pane" style="display:none;">
+      <div style="margin-bottom: 36px;">
+        <div class="section-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+          <div>
+            <div class="section-title" style="font-size: 1.25rem; font-weight: 700; color: var(--text-primary);">💎 Liste des Acheteurs</div>
+            <div class="section-sub" id="customers-count" style="color: var(--text-muted); font-size: 0.85rem;">Chargement...</div>
+          </div>
+          <div style="display:flex; gap:12px; align-items:center;">
+            <input type="text" id="search-customers-input" class="form-input" placeholder="🔍 Rechercher..." style="width:200px; padding: 8px 14px;" oninput="renderCustomers()" />
+            <button class="btn btn-ghost btn-sm" onclick="loadData()">🔄 Actualiser</button>
+          </div>
+        </div>
+
+        <div class="table-wrapper">
+          <table id="customers-table">
+            <thead>
+              <tr>
+                <th>Acheteur</th>
+                <th>ID Boutique</th>
+                <th>Email de paiement</th>
+                <th>Key Fournie</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="customers-tbody">
+              <tr><td colspan="4" style="text-align:center; color: var(--text-muted); padding: 40px;">Chargement des données...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
     <!-- PANE 2: RAILWAY API (FLASK) -->
     <div id="pane-railway" class="tab-pane" style="display:none;">
       <!-- Railway Control Grid -->
@@ -151,9 +215,20 @@
             <label class="form-label" style="font-size: 0.8rem;">Nombre de clés (max 20)</label>
             <input type="number" id="railway-gen-count" class="form-input" value="1" min="1" max="20" style="padding: 8px 12px;" />
           </div>
-          <div class="form-group" style="margin-bottom: 16px;">
-            <label class="form-label" style="font-size: 0.8rem;">Durée de validité (jours, laisser vide si illimité)</label>
-            <input type="number" id="railway-gen-days" class="form-input" placeholder="Illimité" style="padding: 8px 12px;" />
+          <div class="form-group" style="margin-bottom: 12px;">
+            <label class="form-label" style="font-size: 0.8rem;">Durée de validité</label>
+            <select id="railway-gen-duration-preset" class="form-input" onchange="toggleCustomDurationInput('gen')" style="padding: 8px 12px; background-color: var(--card-bg, #1a1a2e); color: var(--text-primary, #ffffff); cursor: pointer; border: 1px solid rgba(255,255,255,0.1); border-radius: 6px;">
+              <option value="unlimited">♾️ Illimité</option>
+              <option value="1">📅 1 Jour</option>
+              <option value="3">📅 3 Jours</option>
+              <option value="7">📅 1 Semaine (7 jours)</option>
+              <option value="30">📅 1 Mois (30 jours)</option>
+              <option value="custom">✏️ Personnalisé...</option>
+            </select>
+          </div>
+          <div class="form-group" id="railway-gen-custom-container" style="display: none; margin-bottom: 16px; transition: all 0.3s ease;">
+            <label class="form-label" style="font-size: 0.8rem;">Durée de validité (jours)</label>
+            <input type="number" id="railway-gen-days" class="form-input" placeholder="Nombre de jours" style="padding: 8px 12px;" min="1" />
           </div>
           <button class="btn btn-primary btn-full" onclick="generateRailwayKeys()" id="railway-gen-btn">Générer les clés</button>
         </div>
@@ -165,9 +240,20 @@
             <label class="form-label" style="font-size: 0.8rem;">Nom du code (la clé)</label>
             <input type="text" id="railway-add-code" class="form-input" placeholder="ex: mon_code_special" style="padding: 8px 12px;" />
           </div>
-          <div class="form-group" style="margin-bottom: 16px;">
+          <div class="form-group" style="margin-bottom: 12px;">
+            <label class="form-label" style="font-size: 0.8rem;">Durée de validité</label>
+            <select id="railway-add-duration-preset" class="form-input" onchange="toggleCustomDurationInput('add')" style="padding: 8px 12px; background-color: var(--card-bg, #1a1a2e); color: var(--text-primary, #ffffff); cursor: pointer; border: 1px solid rgba(255,255,255,0.1); border-radius: 6px;">
+              <option value="unlimited">♾️ Illimité</option>
+              <option value="1">📅 1 Jour</option>
+              <option value="3">📅 3 Jours</option>
+              <option value="7">📅 1 Semaine (7 jours)</option>
+              <option value="30">📅 1 Mois (30 jours)</option>
+              <option value="custom">✏️ Personnalisé...</option>
+            </select>
+          </div>
+          <div class="form-group" id="railway-add-custom-container" style="display: none; margin-bottom: 16px; transition: all 0.3s ease;">
             <label class="form-label" style="font-size: 0.8rem;">Durée de validité (jours)</label>
-            <input type="number" id="railway-add-days" class="form-input" placeholder="Illimité" style="padding: 8px 12px;" />
+            <input type="number" id="railway-add-days" class="form-input" placeholder="Nombre de jours" style="padding: 8px 12px;" min="1" />
           </div>
           <button class="btn btn-primary btn-full" onclick="addRailwayKey()" id="railway-add-btn">Ajouter la clé</button>
         </div>
@@ -190,7 +276,9 @@
             <div class="section-title" style="font-size: 1.25rem; font-weight: 700; color: var(--text-primary);">🔑 Clés enregistrées sur Railway</div>
             <div class="section-sub" id="railway-keys-count" style="color: var(--text-muted); font-size: 0.85rem;">Chargement...</div>
           </div>
-          <div style="display: flex; gap: 8px;">
+          <div style="display: flex; gap: 8px; align-items: center;">
+            <input type="text" id="search-keys-input" class="form-input" placeholder="🔍 Rechercher une clé..." style="width: 220px; padding: 8px 14px;" oninput="filterRailwayKeys()" />
+            <button class="btn btn-danger btn-sm" id="bulk-delete-keys-btn" onclick="bulkDeleteSelectedKeys()" style="display: none; background: linear-gradient(135deg, #ef4444, #dc2626); border-color: #ef4444;">🗑️ Supprimer la sélection</button>
             <button class="btn btn-danger btn-sm" onclick="resetAllRailwayLocks()">🔓 Libérer toutes les clés</button>
             <button class="btn btn-ghost btn-sm" onclick="loadRailwayData()">🔄 Actualiser</button>
           </div>
@@ -199,8 +287,8 @@
           <table>
             <thead>
               <tr>
+                <th style="width: 40px; text-align: center;"><input type="checkbox" id="select-all-keys" onchange="toggleSelectAllKeys(this)"></th>
                 <th>Code / Key</th>
-                <th>Type (Valeur)</th>
                 <th>IP Verrouillée</th>
                 <th>Joueur FiveM / Nom</th>
                 <th>Expiration</th>
@@ -212,6 +300,13 @@
             </tbody>
           </table>
         </div>
+
+        <div id="railway-keys-expand-container" style="display: none; text-align: center; margin-top: 16px;">
+          <button id="railway-keys-expand-btn" class="btn btn-ghost btn-sm" onclick="toggleRailwayKeysExpand()" style="border-color: rgba(168, 85, 247, 0.3);">
+            👁️ Déplier les clés
+          </button>
+        </div>
+
       </div>
 
       <!-- Banned IPs & Logs Grid -->
@@ -256,10 +351,82 @@
               </tbody>
             </table>
           </div>
+          <div id="railway-logs-expand-container" style="display: none; text-align: center; margin-top: 16px;">
+            <button id="railway-logs-expand-btn" class="btn btn-ghost btn-sm" onclick="toggleRailwayLogsExpand()" style="border-color: rgba(168, 85, 247, 0.3);">
+              👁️ Déplier les logs
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- PANE 3: PRODUCTS & PROMO CODES -->
+    <div id="pane-products" class="tab-pane" style="display:none;">
+      <!-- Section Boutique (Produits) -->
+      <div style="margin-bottom: 36px;">
+        <div class="section-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+          <div>
+            <div class="section-title" style="font-size: 1.25rem; font-weight: 700; color: var(--text-primary);">🛍️ Gestion des Produits</div>
+            <div class="section-sub" id="products-count" style="color: var(--text-muted); font-size: 0.85rem;">Chargement...</div>
+          </div>
+          <div style="display:flex; gap:12px; align-items:center;">
+            <button class="btn btn-primary btn-sm" onclick="openProductModal()">➕ Ajouter un produit</button>
+            <button class="btn btn-ghost btn-sm" onclick="loadProducts()">🔄 Actualiser</button>
+          </div>
+        </div>
+        <div class="table-wrapper">
+          <table id="products-table">
+            <thead>
+              <tr>
+                <th>Produit</th>
+                <th>Catégorie</th>
+                <th>Prix</th>
+                <th>Version</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="products-tbody">
+              <tr><td colspan="5" style="text-align:center; color: var(--text-muted); padding: 40px;">Chargement des produits...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Section Codes Promotionnels -->
+      <div style="margin-bottom: 36px; padding-top: 24px; border-top: 1px solid rgba(255,255,255,0.08);">
+        <div class="section-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+          <div>
+            <div class="section-title" style="font-size: 1.25rem; font-weight: 700; color: var(--text-primary);">🏷️ Codes Promotionnels</div>
+            <div class="section-sub" id="promocodes-count" style="color: var(--text-muted); font-size: 0.85rem;">Chargement...</div>
+          </div>
+          <div style="display:flex; gap:12px; align-items:center;">
+            <button class="btn btn-primary btn-sm" onclick="openPromoModal()">➕ Créer un code promo</button>
+            <button class="btn btn-ghost btn-sm" onclick="loadPromocodes()">🔄 Actualiser</button>
+          </div>
+        </div>
+        <div class="table-wrapper">
+          <table id="promocodes-table">
+            <thead>
+              <tr>
+                <th>Code</th>
+                <th>Type</th>
+                <th>Valeur</th>
+                <th>Utilisations</th>
+                <th>Limite</th>
+                <th>Expiration</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="promocodes-tbody">
+              <tr><td colspan="7" style="text-align:center; color: var(--text-muted); padding: 40px;">Chargement des codes promo...</td></tr>
+            </tbody>
+          </table>
         </div>
       </div>
     </div>
   </main>
+</div>
 
   <!-- MODAL: Confirm Delete -->
   <div class="modal-backdrop" id="delete-modal">
@@ -317,6 +484,205 @@
     </div>
   </div>
 
-  <script src="/js/admin.js"></script>
+  <!-- MODAL: Edit Product -->
+  <div class="modal-backdrop" id="edit-product-modal">
+    <div class="modal" style="max-width: 600px; max-height: 90vh; overflow-y: auto;">
+      <div class="modal-title">✏️ Produit</div>
+      <p style="color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 16px;">
+        Gérer les informations du produit pour la boutique.
+      </p>
+      
+      <!-- hidden specific _id -->
+      <input type="hidden" id="edit-product-_id" value="" />
+      
+      <div class="form-group" style="margin-bottom: 12px;">
+        <label class="form-label" for="edit-product-id">ID Interne (ex: ghost_lua)</label>
+        <input id="edit-product-id" type="text" class="form-input" required />
+      </div>
+
+      <div class="form-group" style="margin-bottom: 12px;">
+        <label class="form-label" for="edit-product-name">Nom du Produit</label>
+        <input id="edit-product-name" type="text" class="form-input" required />
+      </div>
+
+      <div class="form-group" style="margin-bottom: 12px;">
+        <label class="form-label" for="edit-product-category">Catégorie</label>
+        <select id="edit-product-category" class="form-input">
+          <option value="utilities">Utilitaires</option>
+          <option value="jobs">Jobs & Illégal</option>
+          <option value="ui">Interfaces (UI)</option>
+        </select>
+      </div>
+
+      <div class="form-group" style="margin-bottom: 12px;">
+        <label class="form-label" for="edit-product-price">Prix (€)</label>
+        <input id="edit-product-price" type="number" step="0.01" class="form-input" required />
+      </div>
+
+      <div class="form-group" style="margin-bottom: 12px;">
+        <label class="form-label" for="edit-product-image">Image (Nom fichier ou URL)</label>
+        <input id="edit-product-image" type="text" class="form-input" placeholder="ghost_lua.jpg" />
+      </div>
+
+      <div class="form-group" style="margin-bottom: 12px;">
+        <label class="form-label" for="edit-product-link">Lien Stripe / Paiement</label>
+        <input id="edit-product-link" type="text" class="form-input" />
+      </div>
+
+      <div class="form-group" style="margin-bottom: 12px;">
+        <label class="form-label" for="edit-product-short">Description courte</label>
+        <input id="edit-product-short" type="text" class="form-input" />
+      </div>
+
+      <div class="form-group" style="margin-bottom: 12px;">
+        <label class="form-label" for="edit-product-long">Description longue</label>
+        <textarea id="edit-product-long" class="form-input" rows="3"></textarea>
+      </div>
+
+      <div class="form-group" style="margin-bottom: 20px;">
+        <label class="form-label" for="edit-product-features">Fonctionnalités (séparées par des virgules)</label>
+        <textarea id="edit-product-features" class="form-input" rows="2"></textarea>
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn btn-ghost" onclick="closeModal('edit-product-modal')">Annuler</button>
+        <button class="btn btn-primary" onclick="submitEditProduct()" id="edit-product-btn">Enregistrer</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: Confirm Delete Product -->
+  <div class="modal-backdrop" id="delete-product-modal">
+    <div class="modal">
+      <div class="modal-title" style="color: var(--error);">🗑️ Supprimer le produit</div>
+      <p style="color: var(--text-secondary); font-size: 0.9rem;">
+        Êtes-vous sûr de vouloir supprimer <strong id="delete-product-name" style="color: var(--text-primary);">—</strong> ?
+        Cette action est <strong>irréversible</strong>.
+      </p>
+      <div class="modal-actions">
+        <button class="btn btn-ghost" onclick="closeModal('delete-product-modal')">Annuler</button>
+        <button class="btn btn-danger" onclick="confirmDeleteProduct()">Supprimer</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: Edit Promo Code -->
+  <div class="modal-backdrop" id="edit-promo-modal">
+    <div class="modal">
+      <div class="modal-title" id="promo-modal-title">🏷️ Créer un Code Promo</div>
+      <p style="color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 16px;">
+        Créez ou modifiez un code de promotion pour la boutique.
+      </p>
+      
+      <input type="hidden" id="edit-promo-_id" value="" />
+      
+      <div class="form-group" style="margin-bottom: 12px;">
+        <label class="form-label" for="edit-promo-code">Code promotionnel (ex: GHOST50)</label>
+        <input id="edit-promo-code" type="text" class="form-input" placeholder="CODE50" required style="text-transform: uppercase;" />
+      </div>
+
+      <div class="form-group" style="margin-bottom: 12px;">
+        <label class="form-label" for="edit-promo-type">Type de remise</label>
+        <select id="edit-promo-type" class="form-input">
+          <option value="percentage">Pourcentage (%)</option>
+          <option value="fixed">Montant fixe (€)</option>
+        </select>
+      </div>
+
+      <div class="form-group" style="margin-bottom: 12px;">
+        <label class="form-label" for="edit-promo-value">Valeur de la remise</label>
+        <input id="edit-promo-value" type="number" step="any" class="form-input" placeholder="ex: 50 pour 50% ou 5 pour 5€" required />
+      </div>
+
+      <div class="form-group" style="margin-bottom: 12px;">
+        <label class="form-label" for="edit-promo-max-uses">Nombre max d'utilisations (laisser vide pour illimité)</label>
+        <input id="edit-promo-max-uses" type="number" class="form-input" placeholder="ex: 100" />
+      </div>
+
+      <div class="form-group" style="margin-bottom: 20px;">
+        <label class="form-label" for="edit-promo-expiry">Date d'expiration (optionnel)</label>
+        <input id="edit-promo-expiry" type="date" class="form-input" />
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn btn-ghost" onclick="closeModal('edit-promo-modal')">Annuler</button>
+        <button class="btn btn-primary" id="edit-promo-btn" onclick="submitEditPromo()">Enregistrer</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: Confirm Delete Promo Code -->
+  <div class="modal-backdrop" id="delete-promo-modal">
+    <div class="modal">
+      <div class="modal-title" style="color: var(--error);">🗑️ Supprimer le Code Promo</div>
+      <p style="color: var(--text-secondary); font-size: 0.9rem;">
+        Êtes-vous sûr de vouloir supprimer le code promo <strong id="delete-promo-name" style="color: var(--text-primary);">—</strong> ?
+        Cette action est irréversible.
+      </p>
+      <div class="modal-actions">
+        <button class="btn btn-ghost" onclick="closeModal('delete-promo-modal')">Annuler</button>
+        <button class="btn btn-danger" onclick="confirmDeletePromo()">Supprimer</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: Customer Details -->
+  <div class="modal-backdrop" id="customer-details-modal">
+    <div class="modal" style="max-width: 500px; border: 1px solid var(--accent-1); box-shadow: 0 0 30px rgba(168,85,247,0.15);">
+      <div class="modal-title">👤 Détails de l'Acheteur</div>
+      
+      <div style="display: flex; gap: 16px; align-items: center; margin-bottom: 24px; padding-bottom: 16px; border-bottom: 1px solid var(--border);">
+        <img id="detail-avatar" src="" style="width: 64px; height: 64px; border-radius: 50%; object-fit: cover; background: var(--bg-card-hover);" onerror="this.src='https://cdn.discordapp.com/embed/avatars/0.png';" />
+        <div>
+          <div id="detail-username" style="font-size: 1.2rem; font-weight: 700; color: var(--text-primary);"></div>
+          <div id="detail-role" style="margin-top: 4px;"></div>
+        </div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px;">
+        <div>
+          <div style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 4px;">ID Boutique</div>
+          <div id="detail-shop-id" style="font-family: monospace; color: var(--accent-1); font-weight: bold;"></div>
+        </div>
+        <div>
+          <div style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 4px;">Discord ID</div>
+          <div id="detail-discord-id" style="font-family: monospace; color: var(--text-primary);"></div>
+        </div>
+        <div style="grid-column: 1 / -1;">
+          <div style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 4px;">Email de paiement</div>
+          <div id="detail-email" style="color: var(--text-primary);"></div>
+        </div>
+        <div>
+          <div style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 4px;">Payé le</div>
+          <div id="detail-paid-at" style="color: var(--text-primary);"></div>
+        </div>
+        <div>
+          <div style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 4px;">Créé le</div>
+          <div id="detail-created-at" style="color: var(--text-primary);"></div>
+        </div>
+        <div style="grid-column: 1 / -1;">
+          <div style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 4px;">Moyen de paiement</div>
+          <div id="detail-payment-method"></div>
+        </div>
+        <div style="grid-column: 1 / -1;">
+          <div style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 4px;">Key Fournie</div>
+          <div id="detail-key"></div>
+        </div>
+        <div style="grid-column: 1 / -1;" id="detail-paypal-note-row" style="display:none;">
+          <div style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 4px;">Note PayPal en attente</div>
+          <div id="detail-paypal-note" style="font-family: monospace; color: #f59e0b;"></div>
+        </div>
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn btn-ghost" onclick="closeModal('customer-details-modal')">Fermer</button>
+        <button class="btn btn-primary" id="confirm-paypal-btn" onclick="confirmPaypalPayment()" style="display:none; background: linear-gradient(135deg,#22c55e,#16a34a); border-color: #22c55e;">
+          ✅ Confirmer paiement PayPal
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/admin.js?v=4"></script>
 </body>
 </html>

@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ghost Dashboard — Connexion</title>
+  <meta name="description" content="Connectez-vous ou créez un compte pour accéder au dashboard." />
+  <link rel="stylesheet" href="css/dashboard-style.css" />
+  <link rel="stylesheet" href="css/auth.css" />
+  <script src="js/dashboard-particles.js" defer></script>
+</head>
+<body>
+  <!-- Background -->
+  <div class="bg-orbs">
+    <div class="bg-orb"></div>
+    <div class="bg-orb"></div>
+    <div class="bg-orb"></div>
+  </div>
+
+  <!-- Auth Container -->
+  <div style="position: absolute; top: 24px; left: 24px; z-index: 10;">
+    <a href="index.html" class="btn btn-ghost btn-sm" style="display: flex; align-items: center; gap: 8px; text-decoration: none; border-color: rgba(255, 255, 255, 0.1); color: var(--text-secondary); padding: 8px 16px;">
+      ⬅️ Retour à la boutique
+    </a>
+  </div>
+
+  <div class="auth-page">
+    <div class="auth-brand">
+      <img src="img/logo.png" alt="Ghost Lua Logo" class="auth-logo" />
+      <h1 class="auth-brand-name">Ghost Dashboard</h1>
+      <p class="auth-brand-sub">Votre espace personnel sécurisé</p>
+    </div>
+
+    <div class="auth-card glass">
+      <!-- Tabs -->
+      <div class="auth-tabs">
+        <button id="tab-login" class="auth-tab active" onclick="switchTab('login')">
+          🔐 Connexion
+        </button>
+        <button id="tab-register" class="auth-tab" onclick="switchTab('register')">
+          ✨ Inscription
+        </button>
+      </div>
+
+      <!-- Alert -->
+      <div id="alert-box" style="display:none;" class="alert" role="alert"></div>
+
+      <!-- LOGIN FORM -->
+      <form id="login-form" class="auth-form" onsubmit="handleLogin(event)">
+        <div class="form-group">
+          <label class="form-label" for="login-username">Nom d'utilisateur</label>
+          <div class="input-wrapper">
+            <span class="input-icon">👤</span>
+            <input id="login-username" type="text" class="form-input" placeholder="Votre username" autocomplete="username" required />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="login-password">Mot de passe</label>
+          <div class="input-wrapper">
+            <span class="input-icon">🔒</span>
+            <input id="login-password" type="password" class="form-input" placeholder="Votre mot de passe" autocomplete="off" required />
+            <span class="input-toggle" onclick="togglePass('login-password', this)" title="Afficher/Masquer">👁️</span>
+          </div>
+        </div>
+
+        <div class="form-group" style="flex-direction: row; align-items: center; gap: 8px; margin-bottom: 16px; cursor: pointer; user-select: none;">
+          <input type="checkbox" id="remember-me" style="width: 16px; height: 16px; accent-color: var(--accent-1); cursor: pointer;" />
+          <label for="remember-me" style="font-size: 0.8rem; color: var(--text-secondary); cursor: pointer; font-weight: 500;">Se rappeler de moi</label>
+        </div>
+
+        <button id="login-btn" type="submit" class="btn btn-primary btn-full">
+          Se connecter
+        </button>
+
+        <p class="auth-switch">
+          Pas encore de compte ?
+          <a href="#" onclick="switchTab('register')">Créer un compte</a>
+        </p>
+      </form>
+
+      <!-- REGISTER FORM -->
+      <form id="register-form" class="auth-form" style="display:none;" onsubmit="handleRegister(event)">
+
+        <div class="form-group">
+          <label class="form-label" for="reg-username">Nom d'utilisateur</label>
+          <div class="input-wrapper">
+            <span class="input-icon">👤</span>
+            <input id="reg-username" type="text" class="form-input" placeholder="3-32 caractères (a-z, 0-9, ._-)" autocomplete="username" required />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="reg-password">Mot de passe</label>
+          <div class="input-wrapper">
+            <span class="input-icon">🔒</span>
+            <input id="reg-password" type="password" class="form-input" placeholder="Minimum 6 caractères" autocomplete="new-password" required />
+            <span class="input-toggle" onclick="togglePass('reg-password', this)" title="Afficher/Masquer">👁️</span>
+          </div>
+          <div id="pwd-strength" class="pwd-strength-bar" style="display:none;">
+            <div id="pwd-fill" class="pwd-fill"></div>
+          </div>
+          <span id="pwd-label" class="pwd-label"></span>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="reg-discord-id">Discord ID</label>
+          <div class="input-wrapper">
+            <span class="input-icon">💬</span>
+            <input id="reg-discord-id" type="text" class="form-input" placeholder="Ex: 123456789012345678" pattern="\d{17,20}" required />
+          </div>
+          <small class="form-hint">Votre ID Discord numérique (17-20 chiffres)</small>
+        </div>
+
+
+
+        <button id="register-btn" type="submit" class="btn btn-primary btn-full">
+          Créer mon compte
+        </button>
+
+        <p class="auth-switch">
+          Déjà un compte ?
+          <a href="#" onclick="switchTab('login')">Se connecter</a>
+        </p>
+      </form>
+
+    </div>
+
+    <div class="auth-footer">
+      <span>🛡️ Connexion sécurisée · Données chiffrées</span>
+    </div>
+  </div>
+
+  <script src="js/auth.js?v=2"></script>
+</body>
+</html>

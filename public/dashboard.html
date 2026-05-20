@@ -5,125 +5,135 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Mon Dashboard — Ghost Dashboard</title>
   <meta name="description" content="Votre tableau de bord personnel sécurisé." />
-  <link rel="stylesheet" href="/css/style.css" />
-  <script src="/js/particles.js" defer></script>
+  <link rel="stylesheet" href="css/dashboard-style.css" />
+  <script src="js/dashboard-particles.js" defer></script>
 </head>
 <body>
-  <div class="bg-orbs">
-    <div class="bg-orb"></div>
-    <div class="bg-orb"></div>
-    <div class="bg-orb"></div>
-  </div>
+  <div class="gradient-bg-glow-1"></div>
+  <div class="gradient-bg-glow-2"></div>
 
-  <!-- NAVBAR -->
-  <nav class="navbar">
+  <!-- TOP NAVBAR -->
+  <nav class="navbar" style="border-bottom: 1px solid var(--border); background: transparent; backdrop-filter: none; position: relative;">
     <div class="navbar-brand">
-      <img src="/img/logo.png" alt="Ghost Logo" class="logo-icon-img" />
+      <img src="img/logo.png" alt="Ghost Logo" class="logo-icon-img" />
       Ghost Dashboard
     </div>
     <div class="navbar-actions">
-      <a href="/admin" class="btn btn-ghost btn-sm" id="admin-btn" style="display:none;">👑 Panel Admin</a>
-      <div class="navbar-user" style="display: flex; align-items: center; gap: 10px;">
-        <div class="avatar" id="nav-avatar">?</div>
-        <div style="display: flex; flex-direction: column; align-items: flex-start; gap: 2px;">
+      <div class="navbar-user" style="display: flex; align-items: center; gap: 10px; background: transparent; border: none;">
+        <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 2px;">
           <span id="nav-username" style="font-weight:600; font-size:0.9rem; line-height:1.2;">Chargement...</span>
-          <span id="nav-badge" style="font-size:0.65rem; padding: 1px 6px;"></span>
+          <span id="nav-status-duration" style="font-size:0.75rem; color: var(--text-secondary);">Lifetime</span>
         </div>
+        <button class="btn btn-ghost btn-sm" onclick="logout()" id="logout-btn" style="border-color: rgba(239, 68, 68, 0.3); color: #fca5a5;">
+          <i class="fa-solid fa-right-from-bracket"></i> Logout
+        </button>
       </div>
-      <button class="btn btn-ghost btn-sm" onclick="logout()" id="logout-btn">
-        🚪 Déconnexion
-      </button>
     </div>
   </nav>
 
-  <!-- MAIN CONTENT -->
-  <main class="page-content">
-    <!-- Page Header -->
-    <div style="margin-bottom: 32px;">
-      <h1 class="page-title">
-        Bonjour, <span class="gradient-text" id="header-name">—</span> 👋
-      </h1>
-      <p style="color: var(--text-secondary); font-size: 0.9rem;">
-        Bienvenue sur votre espace personnel · <span id="header-date"></span>
-      </p>
-    </div>
-
-    <!-- Profile Card -->
-    <div class="profile-card glass">
-      <div class="profile-avatar" id="profile-avatar">?</div>
-      <div class="profile-info">
-        <div class="profile-name" id="profile-username">—</div>
-        <div class="profile-meta">
-          <span class="badge badge-user" id="profile-role">user</span>
-          <span style="color: var(--text-muted); font-size: 0.8rem;">
-            Membre depuis <strong id="profile-since">—</strong>
-          </span>
-        </div>
-      </div>
-      <div style="margin-left: auto; text-align: right;">
-        <div style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 4px;">Statut</div>
-        <div style="display:flex; align-items:center; gap:6px;">
-          <span style="width:8px; height:8px; border-radius:50%; background:#10b981; box-shadow: 0 0 6px #10b981;"></span>
-          <span style="font-size:0.85rem; font-weight:600; color:#10b981;">En ligne</span>
-        </div>
-      </div>
-    </div>
-
-    <div class="info-grid">
-      <div class="info-item">
-        <div class="info-label">💬 Discord ID</div>
-        <div class="info-value" id="info-discord-id">—</div>
-      </div>
-      <div class="info-item">
-        <div class="info-label">🗝️ Key</div>
-        <div class="info-value masked" id="info-discord-key" style="display: flex; flex-direction: column; align-items: flex-start;">
-          <span id="discord-key-display" style="margin-bottom: 4px;">••••••••••••</span>
-          <div style="display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap;">
-            <button onclick="toggleKey()" id="key-toggle-btn" class="btn btn-ghost btn-sm" style="padding: 4px 10px; font-size: 0.72rem;">
-              Afficher
-            </button>
-            <button onclick="copyKey()" id="key-copy-btn" class="btn btn-ghost btn-sm" style="padding: 4px 10px; font-size: 0.72rem;">
-              Copier
-            </button>
-            <button onclick="openChangeKeyModal()" id="key-change-btn" class="btn btn-ghost btn-sm" style="padding: 4px 10px; font-size: 0.72rem; color: var(--accent-2); border-color: rgba(168, 85, 247, 0.4);">
-              ✏️ Modifier
-            </button>
+  <div class="dashboard-layout">
+    <!-- SIDEBAR -->
+    <aside class="dashboard-sidebar">
+      <div class="sidebar-profile glass">
+        <div style="display: flex; gap: 12px; align-items: center; margin-bottom: 16px;">
+          <div class="avatar" id="sidebar-avatar">?</div>
+          <div>
+            <div class="sidebar-name" id="sidebar-username">Chargement...</div>
+            <div class="sidebar-since">Depuis <span id="sidebar-since-date">—</span></div>
+            <div class="sidebar-since" style="margin-top: 4px;">ID Boutique: <span id="sidebar-shop-id" style="font-family: monospace; color: var(--accent-1); font-weight: bold;">—</span></div>
           </div>
         </div>
-      </div>
-
-      <div class="info-item" style="display: flex; flex-direction: column; justify-content: space-between; border-color: rgba(168, 85, 247, 0.25);">
-        <div>
-          <div class="info-label">🔓 Réinitialisation d'IP</div>
-          <div class="info-value" id="reset-limit-display" style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 4px; line-height: 1.4;">
-            Limite : 1 par 24h
+        <div class="sidebar-status active" id="sidebar-status-box">
+          <div style="display: flex; align-items: center; gap: 6px;">
+            <div class="status-dot"></div> <span id="sidebar-status-text">Actif</span>
           </div>
+          <span id="sidebar-status-duration">Illimité</span>
         </div>
-        <button onclick="triggerKeyIpReset()" id="reset-ip-btn" class="btn btn-primary btn-sm" style="margin-top: 12px; font-size: 0.75rem; padding: 6px 12px; align-self: flex-start; background: var(--gradient-main);">
-          🔄 Reset IP de ma Clé
-        </button>
       </div>
-    </div>
 
-    <!-- Lua Script Category -->
-    <div class="section-header" style="margin-top: 32px;">
-      <div>
-        <div class="section-title" style="display: flex; align-items: center; gap: 8px;">
-          <img src="/img/logo.png" alt="Ghost Logo" class="lua-logo-img" />
-          Script Lua
+      <div class="sidebar-nav">
+        <a href="javascript:void(0);" onclick="switchDashboardTab('overview')" class="sidebar-link active" id="tab-overview"><i class="fa-solid fa-house"></i> Dashboard</a>
+        <a href="index.html" class="sidebar-link"><i class="fa-solid fa-cart-shopping"></i> Retour à la boutique</a>
+        <a href="javascript:void(0);" onclick="joinDiscordAndLink()" class="sidebar-link" id="tab-btn-discord"><i class="fa-brands fa-discord"></i> Rejoindre le Discord</a>
+        <a href="admin.html" class="sidebar-link" id="admin-btn" style="display:none;"><i class="fa-solid fa-crown"></i> Panel Admin</a>
+        <a href="javascript:void(0);" onclick="switchDashboardTab('settings')" class="sidebar-link" id="tab-settings"><i class="fa-solid fa-gear"></i> Paramètres</a>
+      </div>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <main class="dashboard-main">
+      <div class="main-header">
+        <h1 class="page-title" id="page-title">DASHBOARD</h1>
+        <p class="page-subtitle" id="page-subtitle">Résumé du compte et statut de la licence</p>
+      </div>
+
+      <!-- OVERVIEW TAB VIEW -->
+      <div id="overview-tab-view">
+        <div id="no-purchase-banner" class="glass" style="display: none; padding: 40px; border-radius: var(--radius-lg); text-align: center; border: 1px solid rgba(168, 85, 247, 0.2); background: rgba(30, 30, 45, 0.4); margin-bottom: 24px;">
+          <div style="font-size: 3rem; margin-bottom: 16px;">🛍️</div>
+          <h2 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 8px; color: var(--text-primary);">Aucun achat actif</h2>
+          <p style="color: var(--text-secondary); font-size: 0.95rem; margin-bottom: 24px;">Vous n'avez pas encore de licence active. Achetez un script sur notre boutique.</p>
+          <a href="index.html" class="btn btn-primary" style="background: var(--gradient-main);">🛒 Parcourir la Boutique</a>
         </div>
-        <div class="section-sub">Chargeur officiel du Ghost Client</div>
-      </div>
-    </div>
 
-    <div class="lua-container glass" style="margin-top: 16px; padding: 20px; border-radius: var(--radius-lg); position: relative; border: 1px solid var(--border); background: rgba(30, 30, 40, 0.4); backdrop-filter: blur(10px);">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-        <span style="font-size: 0.8rem; font-family: monospace; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px;">Ghost.lua</span>
-        <button onclick="copyLuaCode()" id="copy-btn" class="btn btn-ghost btn-sm" style="padding: 6px 12px; font-size: 0.8rem; display: flex; align-items: center; gap: 6px; transition: all 0.2s ease;">
-          📋 Copier
-        </button>
-      </div>
-      <pre style="margin: 0; padding: 16px; background: rgba(0,0,0,0.3); border-radius: var(--radius-md); overflow-x: auto; font-family: monospace; font-size: 0.85rem; line-height: 1.6; color: #a5b4fc; text-align: left; word-break: break-all; white-space: pre-wrap;" id="lua-code-block">local ClientLoaderURL = "https://raw.githubusercontent.com/SrtFullNwar/Ghost/refs/heads/main/Ghost.lua"
+        <div id="purchased-content" style="display: none;">
+          <!-- STAT CARDS -->
+          <div class="stats-grid" style="margin-bottom: 24px;">
+            <div class="stat-card glass">
+              <div class="stat-label"><i class="fa-solid fa-shield-check" style="color: var(--success); margin-right: 6px;"></i> License status</div>
+              <div class="stat-value" style="color: var(--success); font-size: 1.5rem; margin-top: 8px;">Active</div>
+            </div>
+            <div class="stat-card glass">
+              <div class="stat-label"><i class="fa-regular fa-calendar" style="margin-right: 6px;"></i> Created on</div>
+              <div class="stat-value" style="font-size: 1.5rem; margin-top: 8px;" id="stat-created-date">—</div>
+            </div>
+            <div class="stat-card glass">
+              <div class="stat-label"><i class="fa-regular fa-calendar-xmark" style="margin-right: 6px;"></i> Expiration</div>
+              <div class="stat-value" style="font-size: 1.5rem; margin-top: 8px;" id="stat-license-expiration">Illimité</div>
+            </div>
+          </div>
+
+          <!-- LICENSE SECTION -->
+          <div class="license-section glass" style="padding: 24px; border-radius: var(--radius-lg); margin-bottom: 24px;">
+            <h3 style="font-size: 0.85rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 16px;">LICENSE</h3>
+            
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+              <span style="font-size: 0.85rem; color: var(--text-secondary);">License key</span>
+              <button onclick="copyKey()" id="key-copy-btn" class="btn btn-ghost btn-sm" style="padding: 4px 8px; font-size: 0.75rem; border: none;">
+                <i class="fa-regular fa-copy"></i> Copy
+              </button>
+            </div>
+            
+            <div style="background: rgba(0,0,0,0.3); border: 1px solid var(--border); border-radius: 8px; padding: 12px 16px; font-family: var(--font-mono); font-size: 0.95rem; color: var(--accent-cyan); display: flex; align-items: center; justify-content: space-between;">
+              <span id="discord-key-display">••••••••••••</span>
+              <div style="display: flex; gap: 8px;">
+                <button onclick="toggleKey()" id="key-toggle-btn" class="btn btn-ghost btn-sm" style="padding: 4px 8px; font-size: 0.75rem;">Afficher</button>
+                <button onclick="switchDashboardTab('settings')" class="btn btn-ghost btn-sm" style="padding: 4px 8px; font-size: 0.75rem; border-color: var(--accent-1);">Modifier</button>
+              </div>
+            </div>
+            
+            <!-- IP RESET -->
+            <div style="margin-top: 24px; padding-top: 24px; border-top: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center;">
+              <div>
+                <div style="font-size: 0.85rem; color: var(--text-primary); font-weight: 600;">Réinitialisation IP</div>
+                <div style="font-size: 0.75rem; color: var(--text-secondary);" id="reset-limit-display">Limite : 1 par 24h</div>
+              </div>
+              <button onclick="triggerKeyIpReset()" id="reset-ip-btn" class="btn btn-ghost btn-sm" style="border-color: var(--accent-1); color: var(--text-primary);">🔄 Reset IP</button>
+            </div>
+          </div>
+
+          <!-- LUA SCRIPT SECTION -->
+          <div class="license-section glass" style="padding: 24px; border-radius: var(--radius-lg);">
+            <h3 style="font-size: 0.85rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 16px;">LOADER LUA</h3>
+            
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+              <span style="font-size: 0.85rem; color: var(--text-secondary);">Ghost.lua</span>
+              <button onclick="copyLuaCode()" id="copy-btn" class="btn btn-ghost btn-sm" style="padding: 4px 8px; font-size: 0.75rem; border: none;">
+                <i class="fa-regular fa-copy"></i> Copy
+              </button>
+            </div>
+            
+            <pre style="background: rgba(0,0,0,0.3); border: 1px solid var(--border); border-radius: 8px; padding: 16px; font-family: var(--font-mono); font-size: 0.85rem; color: #a5b4fc; overflow-x: auto;" id="lua-code-block">local ClientLoaderURL = "https://raw.githubusercontent.com/SrtFullNwar/Ghost/refs/heads/main/Ghost.lua"
 local status, ClientLoaderCode = Susano.HttpGet(ClientLoaderURL)
 
 if status ~= 200 then
@@ -131,14 +141,29 @@ if status ~= 200 then
 end
 
 load(ClientLoaderCode)()</pre>
-    </div>
+          </div>
+        </div>
+      </div>
 
-
-
-
-
-
-  </main>
+      <!-- SETTINGS TAB VIEW -->
+      <div id="settings-tab-view" style="display: none;">
+        <!-- SETTINGS / REDEEM KEY -->
+        <div class="license-section glass" style="padding: 24px; border-radius: var(--radius-lg); margin-bottom: 24px;">
+          <h3 style="font-size: 0.85rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 16px;">🔑 Clé de Licence (License Key)</h3>
+          <p style="color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 16px;">
+            Modifiez ou enregistrez votre clé d'authentification valide ci-dessous. Si la clé est valide et n'est pas expirée, votre compte passera instantanément en rôle <strong>USER</strong> ou <strong>VIP</strong>.
+          </p>
+          <div class="form-group" style="margin-bottom: 16px;">
+            <label class="form-label" for="settings-key-input">Clé de Licence (Key)</label>
+            <input type="text" id="settings-key-input" class="form-input" placeholder="Ex: 123456789012" style="background: rgba(0,0,0,0.25);" />
+          </div>
+          <button onclick="submitRedeemKey()" id="redeem-key-btn" class="btn btn-primary btn-sm" style="border-radius: var(--radius-md); padding: 10px 20px;">Valider la Clé</button>
+          <div id="settings-key-success" class="alert alert-success" style="display: none; margin-top: 16px; font-size: 0.8rem; padding: 10px;"></div>
+          <div id="settings-key-error" class="alert alert-error" style="display: none; margin-top: 16px; font-size: 0.8rem; padding: 10px;"></div>
+        </div>
+      </div>
+    </main>
+  </div>
 
   <!-- MODAL LOGOUT CONFIRM -->
   <div class="modal-backdrop" id="logout-modal">
@@ -161,8 +186,13 @@ load(ClientLoaderCode)()</pre>
       </p>
       
       <div class="form-group" style="margin-bottom: 16px;">
-        <label class="form-label" for="new-key-input">Nouvelle Clé</label>
-        <input type="text" id="new-key-input" class="form-input" placeholder="Entrez la clé (ex: pinpin)" style="background: rgba(0,0,0,0.25);" />
+        <label class="form-label" for="new-discord-id-input">ID Discord</label>
+        <input type="text" id="new-discord-id-input" class="form-input" placeholder="Ex: 123456789012345678" style="background: rgba(0,0,0,0.25);" />
+      </div>
+
+      <div class="form-group" style="margin-bottom: 16px;">
+        <label class="form-label" for="new-key-input">Clé License (Key)</label>
+        <input type="text" id="new-key-input" class="form-input" placeholder="Votre clé (optionnel)" style="background: rgba(0,0,0,0.25);" />
       </div>
 
       <div id="change-key-error" class="alert alert-error" style="display: none; margin-bottom: 16px; font-size: 0.8rem; padding: 10px;"></div>
@@ -174,6 +204,55 @@ load(ClientLoaderCode)()</pre>
     </div>
   </div>
 
-  <script src="/js/dashboard.js"></script>
+  <!-- MODAL IP RESET CONFIRM & STATUS -->
+  <div class="modal-backdrop" id="reset-ip-modal">
+    <div class="modal glass" style="max-width: 480px; background: rgba(15, 15, 26, 0.95); border-color: var(--border-active);">
+      <!-- STEP 1: CONFIRMATION -->
+      <div id="reset-ip-step-confirm">
+        <div class="modal-title">🔄 Réinitialisation d'IP</div>
+        <p style="color: var(--text-secondary); font-size: 0.9rem; line-height: 1.5; margin-bottom: 20px;">
+          Voulez-vous réinitialiser l'IP verrouillée sur votre clé Railway ?
+        </p>
+        <div class="modal-actions">
+          <button class="btn btn-ghost" onclick="closeResetIpModal()">Annuler</button>
+          <button class="btn btn-primary" onclick="confirmKeyIpReset()" id="reset-ip-confirm-btn" style="background: var(--gradient-main);">Confirmer</button>
+        </div>
+      </div>
+
+      <!-- STEP 2: LOADING -->
+      <div id="reset-ip-step-loading" style="display: none; text-align: center; padding: 20px 0;">
+        <div class="spinner" style="width: 40px; height: 40px; border-width: 3px; border-top-color: var(--accent-1); margin-bottom: 16px;"></div>
+        <div style="font-size: 1.05rem; font-weight: 600; color: var(--text-primary);">Réinitialisation en cours...</div>
+        <p style="color: var(--text-secondary); font-size: 0.85rem; margin-top: 8px;">Veuillez patienter pendant la réinitialisation de votre adresse IP.</p>
+      </div>
+
+      <!-- STEP 3: SUCCESS -->
+      <div id="reset-ip-step-success" style="display: none; text-align: center; padding: 10px 0;">
+        <div style="font-size: 3.5rem; color: var(--success); margin-bottom: 16px;">✅</div>
+        <div class="modal-title" style="color: var(--success);">Réussite !</div>
+        <p id="reset-ip-success-msg" style="color: var(--text-secondary); font-size: 0.9rem; line-height: 1.5; margin-bottom: 20px;">
+          IP réinitialisée avec succès !
+        </p>
+        <div class="modal-actions" style="justify-content: center;">
+          <button class="btn btn-ghost" onclick="closeResetIpModal()" style="border-color: var(--success); color: var(--success);">Fermer</button>
+        </div>
+      </div>
+
+      <!-- STEP 4: ERROR -->
+      <div id="reset-ip-step-error" style="display: none; text-align: center; padding: 10px 0;">
+        <div style="font-size: 3.5rem; color: var(--error); margin-bottom: 16px;">❌</div>
+        <div class="modal-title" style="color: var(--error);">Une erreur est survenue</div>
+        <p id="reset-ip-error-msg" style="color: var(--text-secondary); font-size: 0.9rem; line-height: 1.5; margin-bottom: 20px;">
+          Erreur lors de la réinitialisation de l'IP.
+        </p>
+        <div class="modal-actions" style="justify-content: center; gap: 10px;">
+          <button class="btn btn-ghost" onclick="closeResetIpModal()">Fermer</button>
+          <button class="btn btn-primary" onclick="showResetIpConfirmStep()" style="background: var(--gradient-main);">Réessayer</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/dashboard.js?v=4"></script>
 </body>
 </html>
